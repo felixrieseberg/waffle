@@ -1,0 +1,11 @@
+div.main {
+    width: calc(100vw - 250px);
+    padding: 10px;
+    float: right;
+}
+
+.full-calendar {
+    .fc-toolbar h2 {
+        font-size: 2.4rem;
+    }
+}

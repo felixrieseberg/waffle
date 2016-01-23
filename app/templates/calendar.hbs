@@ -1,0 +1,11 @@
+<div class="app">
+    {{b-sidebar toggleSettings="toggleSettings"}}
+
+    <div class="main">
+        {{full-calendar events=events}}
+    </div>
+</div>
+
+{{b-settings isEnabled=settingsVisible}}
+
+<button {{action "getEvents"}}>Get</button>

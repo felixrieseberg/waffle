@@ -1,0 +1,36 @@
+<div class="settings md-modal md-effect {{if isEnabled "md-show"}}" id="modal-1">
+    <div class="md-content">
+        <header>
+            <ul>
+                <li class="{{if isPreferences "selected"}}" {{action "switchToPreferences"}}>
+                    <i class="icon icon-settings"></i>
+                    <span class="label">Preferences</span>
+                </li>
+                <li class="{{if isAccounts "selected"}}" {{action "switchToAccounts"}}>
+                    <i class="icon icon-users"></i>
+                    <span class="label">Accounts</span>
+                </li>
+            </ul>
+        </header>
+        <div class="md-body">
+            {{#if isPreferences}}
+                <div>
+                    
+                </div>
+            {{else if isAccounts}}
+                <div>
+                    <ul class="accounts">
+                        <li>
+                            
+                            <strong>Office 365</strong><br />
+                            <span>Outlook.com & Corporate Accounts</span>
+                            
+                            <button id="clear-completed" {{action "authenticateOffice"}}>{{if o365email o365email "Connect"}}</button>
+                        </li>
+                    </ul>
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</div>
+<div {{action "toggleVisibility"}} class="md-overlay"></div>

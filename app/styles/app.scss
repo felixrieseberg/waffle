@@ -1,0 +1,20 @@
+// Imports
+@import './normalize';
+@import './skeleton';
+@import './sidebar';
+@import './calendar';
+@import './modal';
+@import './settings';
+
+// Font
+@import 'bower_components/lato/scss/lato';
+@import './icons';
+
+// Style
+html body {
+    font-family: "Lato","Geneva CY","Lucida Grande","Arial Unicode MS","Helvetica Neue","Helvetica","Arial",sans-serif;
+}
+
+[data-ember-action] {
+    cursor: pointer;
+}
