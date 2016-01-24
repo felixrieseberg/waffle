@@ -21,11 +21,21 @@
                 <div>
                     <ul class="accounts">
                         <li>
-                            
+                            {{#each accounts as |account|}}
+                                <li>
+                                    <strong>{{account.name}}</strong><br />
+                                    <span>{{account.username}}</span>
+                                    <button {{action "removeAccount" account}}>Remove</button>
+                                </li>
+                            {{/each}}
+                        </li>
+                    </ul>
+                    <h6>Add Account</h6>
+                    <ul class="accounts">
+                        <li>
                             <strong>Office 365</strong><br />
                             <span>Outlook.com & Corporate Accounts</span>
-                            
-                            <button id="clear-completed" {{action "authenticateOffice"}}>{{if o365email o365email "Connect"}}</button>
+                            <button {{action "addAccount" "office"}}>Connect</button>
                         </li>
                     </ul>
                 </div>

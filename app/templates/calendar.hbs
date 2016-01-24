@@ -1,11 +1,18 @@
 <div class="app">
     {{b-sidebar toggleSettings="toggleSettings"}}
-
+    
     <div class="main">
-        {{full-calendar events=events}}
+        <div class="calendarHeader">
+            <h4 class="calendarDate">{{currentDisplayDate}}</h4>
+            <div class="buttons">
+                <button {{action "switchCalendarView" "agendaWeek"}}>Week View</button>
+                <button {{action "switchCalendarView" "month"}}>Month View</button>
+                <button {{action "moveCalendar" "prev"}}>Prev</button>
+                <button {{action "moveCalendar" "next"}}>Next</button>
+            </div>
+        </div>
+        {{full-calendar events=eventSource header=calendarHeader}}
     </div>
 </div>
 
 {{b-settings isEnabled=settingsVisible}}
-
-<button {{action "getEvents"}}>Get</button>

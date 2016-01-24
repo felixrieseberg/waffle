@@ -1,11 +1,21 @@
+@import './skeleton';
+
 div.main {
-    width: calc(100vw - 250px);
+    width: calc(100vw - 270px);
+    height: calc(100vh - 20px);
     padding: 10px;
     float: right;
-}
-
-.full-calendar {
-    .fc-toolbar h2 {
-        font-size: 2.4rem;
+    
+    .calendarDate {
+        display: inline-block;
+        
+    }
+    
+    .calendarHeader {
+        margin-bottom: -35px;
+        
+        .buttons {
+            float: right;
+        }
     }
 }

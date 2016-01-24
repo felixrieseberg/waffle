@@ -1,25 +1,47 @@
 import Ember from 'ember';
 
 export default Ember.Component.extend({
-    office: Ember.inject.service(),
-  
-    currentView: 'accounts',
-    o365: true,
+    store: Ember.inject.service('store'),
     
-    o365email: Ember.computed({
-        get() {
-            return this.get('office').getEmail()
-        }
-    }),
+    currentView: 'accounts',
     
     init() {
         this._super(...arguments);
         this.send('switchToPreferences');
     },
+    
+    accounts: Ember.computed({
+        get() {
+            return this.get('store').findAll('account');
+        }
+    }),
+    
+    strategies: Ember.computed({
+        get() {
+            // TODO: Query for strategies
+            return [{
+                name: 'Office 365',
+                shortname: 'office'
+            }];
+        }
+    }),
 
     actions: {
-        authenticateOffice() {
-            this.get('office').authenticate();
+        addAccount(strategy) {
+            if (!strategy || strategy.length < 1) {
+                return;
+            }
+            
+            this.get(`strategy:${strategy}`).addAccount().then((newAccount) => {
+                console.log(newAccount);
+            });
+        },
+        
+        removeAccount(account) {
+            account.deleteRecord();
+            
+            // TODO: Implement undo
+            account.save();
         },
         
         toggleVisibility() {
