@@ -6,7 +6,11 @@ module.exports = function (defaults) {
     var app = new EmberApp(defaults, {
         emberCliFontAwesome: {
             useScss: true
-        }
+        },
+        babel: {
+            includePolyfill: true
+        },
+        hinting: false
     });
 
     app.import('bower_components/lato/font/lato-regular/lato-regular.ttf', { destDir: 'font/lato-regular' });

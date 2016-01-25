@@ -1,7 +1,5 @@
 import Ember from 'ember';
-import { storageFor } from 'ember-local-storage';
 import moment from 'moment';
-import secrets from '../secrets';
 
 export default Ember.Service.extend({
     store: Ember.inject.service(),
@@ -49,48 +47,49 @@ export default Ember.Service.extend({
 
             const baseUrl = 'https://outlook.office.com/api/v2.0/me/calendarview';
             const url = `${baseUrl}?startDateTime=${startDate}&endDateTime=${endDate}`
-            const token = account.get('oauth').access_token;
+            const oauth = account.get('oauth');
             const tz = moment.tz.guess();
-            
+
             const events = [];
             const fetchEvents = (_url, _token) => {
                 this._makeApiCall(_url, _token)
-                .then((response) => {
-                    if (!response || !response.ok || !response.body) {
-                        return;
-                    }
-                    
-                    response.body.value.forEach((item) => {
-                        events.push({
-                            start: moment(item.Start.DateTime + 'Z').format(),
-                            end: moment(item.End.DateTime + 'Z').format(),
-                            title: item.Subject,
-                            editable: false
+                    .then((response) => {
+                        if (!response || !response.ok || !response.body) {
+                            return;
+                        }
+
+                        response.body.value.forEach((item) => {
+                            events.push({
+                                start: moment(item.Start.DateTime + 'Z').format(),
+                                end: moment(item.End.DateTime + 'Z').format(),
+                                title: item.Subject,
+                                editable: false
+                            });
                         });
+
+                        if (response.body['@odata.nextLink']) {
+                            fetchEvents(response.body['@odata.nextLink'], _token);
+                        } else {
+                            resolve(events);
+                        }
+                    })
+                    .catch((err) => {
+                        if (err && err.response && err.response.statusCode === 401) {
+                            console.log('Office 365: Token probably expired, fetching new token');
+                            return this._updateToken(account)
+                                .then((newToken) => {
+                                    return fetchEvents(_url, newToken);
+                                })
+                                .catch((error) => {
+                                   console.log('Office 365: Attempted to getCalendarView', error); 
+                                });
+                        } else {
+                            console.log('Office 365: Unknown error during api call:', err);
+                        }
                     });
-                    
-                    if (response.body['@odata.nextLink']) {
-                        fetchEvents(response.body['@odata.nextLink'], _token);
-                    } else {
-                        resolve(events);
-                    }
-                    console.log(response);
-                })
-                .catch((error) => {
-                    // Token expired?
-                    console.log(account.get('oauth'));
-                    return this._requestToken().then((response) => {
-                        const oauth = response;
-                        oauth.code = account.get('oauth').code;
-                        
-                        account.set('oauth', oauth);
-                        
-                        return this._makeApiCall(_url, _token);
-                    });
-                });
             }
-            
-            fetchEvents(url, token);
+
+            fetchEvents(url, oauth.access_token);
         });
     },
 
@@ -142,13 +141,11 @@ export default Ember.Service.extend({
                 'Accept': 'application/json',
                 'User-Agent': 'butter/dev'
             })
-            .end((err, response) => {
+            .end((error, response) => {
                 if (response && response.ok) {
                     resolve(response);
                 } else {
-                    // Error
-                    console.log(err, response);
-                    reject(err);
+                    reject({error, response});
                 }
             });
         })
@@ -167,15 +164,43 @@ export default Ember.Service.extend({
             .send(`code=${code}`)
             .send('redirect_uri=https%3A%2F%2Fredirect.butter')
             .send('grant_type=authorization_code')
-            .end((err, response) => {
+            .end((error, response) => {
                 if (response && response.ok && response.body) {
                     resolve(response.body);
                 } else {
-                    // Error
-                    console.log(err, response);
-                    reject(err);
+                    reject({error, response});
                 }
             });
+        });
+    },
+
+    _updateToken(account) {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            const oauth = account.get('oauth');
+
+            return this._requestToken(oauth.code)
+                .then((response) => {
+                    // TODO: Error handling
+                    const newOauth = response;
+                    newOauth.code = account.get('oauth').code;
+
+                    account.set('oauth', oauth).save();
+                    resolve(response.access_token);
+                })
+                .catch((error) => {
+                    if (error.response && error.response.body) {
+                        // Check if the code is expired, too
+                        const errBody = error.response.body
+                        if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
+                            // Let's authenticate the current account - again
+                            console.log('Office 365: Tried fetching new token, but code seems to be expired, too.');
+                            this._reauthenticateAfterWarning(account);
+                            reject(new Error('code expired'));
+                        }
+                    } else {
+                        reject(error);
+                    }
+                });
         });
     },
 
@@ -198,5 +223,35 @@ export default Ember.Service.extend({
                 reject(err);
             }
         }
+    },
+
+    _reauthenticateAfterWarning(account) {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            this.notifications.error(`Your credentials for ${account.get('username')} expired. Click to reauthenticate.`, {
+                onClick: (notification) => {
+                    notification.close();
+                    
+                    this.authenticate()
+                        .then((response) => {
+                            if (!response || !response.id_token) {
+                                return;
+                            }
+
+                            account.setProperties({
+                                name: 'Office 365',
+                                username: this.getEmailFromToken(response.id_token),
+                                strategy: 'office',
+                                oauth: response
+                            });
+                            account.save();
+
+                            resolve(account);
+                        })
+                        .catch((err) => {
+                            reject(err);
+                        });
+                }
+            });
+        });
     }
 });
