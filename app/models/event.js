@@ -1,16 +1,18 @@
 import DS from 'ember-data';
+import { Model } from 'ember-pouch';
 
-export default DS.Model.extend({
-    odataId: DS.attr('string'),
+export default Model.extend({
+    providerId: DS.attr('string'),
     //Attendees: Array[0]
     body: DS.attr('string'),
     bodyPreview: DS.attr('string'),
+    editable: DS.attr('boolean'),
     //Categories: Array[0]
     //ChangeKey: "f46rRLd++ECpaAOXpXOchQACqzBkoQ=="
     //CreatedDateTime: "2016-01-19T23:55:40.5749569Z"
     end: DS.attr('string'),
     //Importance: "Normal"
-    //IsAllDay: false
+    IsAllDay: DS.attr('boolean', { defaultValue: false }),
     //IsCancelled: false
     //IsOrganizer: true
     //IsReminderOn: false
@@ -27,6 +29,6 @@ export default DS.Model.extend({
     //SeriesMasterId: null
     //ShowAs: "Busy"
     start: DS.attr('string'),
-    subject: DS.attr('string')
+    title: DS.attr('string')
     //Type: "SingleInstance"
 });

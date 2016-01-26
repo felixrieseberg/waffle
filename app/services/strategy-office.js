@@ -45,8 +45,8 @@ export default Ember.Service.extend({
             startDate = moment(startDate).toISOString();
             endDate = moment(endDate).toISOString();
 
-            const baseUrl = 'https://outlook.office.com/api/v2.0/me/calendarview';
-            const url = `${baseUrl}?startDateTime=${startDate}&endDateTime=${endDate}`
+            const baseUrl = `https://outlook.office.com/api/v2.0/users/${account.get('username')}/calendarview`;
+            const url = `${baseUrl}?startDateTime=${startDate}&endDateTime=${endDate}`;
             const oauth = account.get('oauth');
             const tz = moment.tz.guess();
 
@@ -63,7 +63,8 @@ export default Ember.Service.extend({
                                 start: moment(item.Start.DateTime + 'Z').format(),
                                 end: moment(item.End.DateTime + 'Z').format(),
                                 title: item.Subject,
-                                editable: false
+                                editable: false,
+                                providerId: item.Id
                             });
                         });
 
@@ -81,7 +82,7 @@ export default Ember.Service.extend({
                                     return fetchEvents(_url, newToken);
                                 })
                                 .catch((error) => {
-                                   console.log('Office 365: Attempted to getCalendarView', error); 
+                                   console.log('Office 365: Attempted to getCalendarView', error);
                                 });
                         } else {
                             console.log('Office 365: Unknown error during api call:', err);
@@ -228,9 +229,9 @@ export default Ember.Service.extend({
     _reauthenticateAfterWarning(account) {
         return new Ember.RSVP.Promise((resolve, reject) => {
             this.notifications.error(`Your credentials for ${account.get('username')} expired. Click to reauthenticate.`, {
+                autoClear: true,
+                clearDuration: 3000,
                 onClick: (notification) => {
-                    notification.close();
-                    
                     this.authenticate()
                         .then((response) => {
                             if (!response || !response.id_token) {

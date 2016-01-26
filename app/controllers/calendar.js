@@ -2,14 +2,16 @@ import Ember from 'ember';
 import moment from 'moment';
 
 export default Ember.Controller.extend({
+    synchro: Ember.inject.service(),
+
     settingsVisible: false,
-    
+
     calendarHeader: {
         left: '',
         center: '',
         right: ''
     },
-    
+
     currentView: 'month',
     currentDisplayDate: '',
 
@@ -23,16 +25,16 @@ export default Ember.Controller.extend({
         $(window).off('resize');
         $(window).resize(() => this.resetCalendarHeight());
     },
-    
+
     updateCurrentDisplayDate() {
         const now = Ember.$('.full-calendar').fullCalendar('getDate');
         const view = this.get('currentView');
         let displayDate;
-        
+
         if (view === 'month') {
             displayDate = `${now.format('MMMM')} ${now.year()}`;
         }
-        
+
         if (view === 'agendaWeek') {
             displayDate = now.calendar(null, {
                 sameDay: '[This Week]',
@@ -43,7 +45,7 @@ export default Ember.Controller.extend({
                 sameElse: 'Wo[ Week of ]YYYY'
             });
         }
-        
+
         this.set('currentDisplayDate', displayDate);
     },
 
@@ -51,7 +53,7 @@ export default Ember.Controller.extend({
         const height = Ember.$(window).height() - 40;
         Ember.$('.full-calendar').fullCalendar('option', 'height', height);
     },
-    
+
     eventSource: Ember.computed({
         get() {
             const _this = this;
@@ -66,15 +68,21 @@ export default Ember.Controller.extend({
     getCalendarView(start, end, timezone, callback, _this) {
         let events = [];
         let promises = [];
-        
-        _this.get('model').forEach((account) => {
-            const strategy = 'strategy:' + account.get('strategy');
-            const promise = _this.get(strategy).getCalendarView(start, end, account)
-                .then((returnedEvents) => {
-                    events = events.concat(returnedEvents);
-                });
 
-            promises.push(promise);
+        _this.get('model').forEach(account => {
+            promises.push(account.get('events').then(accountEvents => {
+                console.log(`Calendar: Processing ${accountEvents.length} events for ${account.get('username')}`);
+
+                accountEvents.forEach(item => {
+                    events.push({
+                        start: item.get('start'),
+                        end: item.get('end'),
+                        title: item.get('title'),
+                        editable: item.get('editable')
+                    });
+
+                })
+            }));
         });
 
         Ember.RSVP.allSettled(promises).then(() => callback(events));
@@ -84,7 +92,7 @@ export default Ember.Controller.extend({
         toggleSettings() {
             this.toggleProperty('settingsVisible')
         },
-        
+
         moveCalendar(to) {
             switch (to) {
                 case 'prev':
@@ -96,14 +104,18 @@ export default Ember.Controller.extend({
                 default:
                     break;
             }
-            
+
             Ember.run.next(() => this.updateCurrentDisplayDate());
         },
-        
+
         switchCalendarView(view) {
             this.set('currentView', view);
             Ember.$('.full-calendar').fullCalendar('changeView', view);
             Ember.run.next(() => this.updateCurrentDisplayDate());
+        },
+
+        sync() {
+            this.get('synchro').synchronize();
         }
     }
 });
