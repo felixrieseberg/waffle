@@ -7,5 +7,6 @@ export default Model.extend({
     password: DS.attr('string'),
     strategy: DS.attr('string'),
     oauth: DS.attr(), // Generic object to hold ouath information,
-    events: DS.hasMany('event', {async: true});
+    events: DS.hasMany('event', {async: true}),
+    error: DS.attr()
 });

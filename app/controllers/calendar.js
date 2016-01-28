@@ -24,6 +24,14 @@ export default Ember.Controller.extend({
 
         $(window).off('resize');
         $(window).resize(() => this.resetCalendarHeight());
+
+        this.get('synchro').on('update', this.handleSynchroUpdate);
+    },
+
+    handleSynchroUpdate() {
+        console.log('Refetching Events');
+        Ember.$('.full-calendar').fullCalendar('removeEvents');
+        Ember.$('.full-calendar').fullCalendar('refetchEvents');
     },
 
     updateCurrentDisplayDate() {

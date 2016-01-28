@@ -51,7 +51,7 @@
   "ember-electron": {
     "WHAT IS THIS?": "Please see the README.md",
     "name": null,
-    "platform": null,
+    "platform": "darwin",
     "arch": null,
     "version": null,
     "app-bundle-id": null,

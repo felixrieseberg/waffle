@@ -1,6 +1,6 @@
 import Ember from 'ember';
 
-export default Ember.Service.extend({
+export default Ember.Service.extend(Ember.Evented, {
     store: Ember.inject.service(),
 
     init() {
@@ -9,6 +9,7 @@ export default Ember.Service.extend({
     },
 
     startEngine() {
+        console.log('Started Synchronization Engine');
         this.set('syncInterval', this.schedule(this.get('synchronize')));
     },
 
@@ -20,30 +21,59 @@ export default Ember.Service.extend({
         return Ember.run.later(this, function () {
             f.apply(this);
             this.set('syncInterval', this.schedule(f));
-        }, 300000);
+        }, 180000);
     },
 
     async synchronize() {
         const store = this.get('store');
         const accounts = await store.findAll('account');
-        const promises = [];
-
-        // Start with now, +/- 10 days
-        const now = moment();
-        const n30 = now.clone().subtract(10, 'days');
-        const p30 = now.clone().add(10, 'days');
+        const times = {
+            now: moment(),
+            in: {
+                '10': moment().add(10, 'days'),
+                '30': moment().add(20, 'days'),
+                '60': moment().add(60, 'days'),
+                '120': moment().add(120, 'days'),
+                '240': moment().add(240, 'days'),
+                '480': moment().add(480, 'days')
+            },
+            ago: {
+                '10': moment().subtract(10, 'days'),
+                '30': moment().subtract(20, 'days'),
+                '60': moment().subtract(60, 'days'),
+                '120': moment().subtract(120, 'days'),
+                '240': moment().subtract(240, 'days'),
+                '480': moment().subtract(480, 'days')
+            }
+        };
 
         for (let i = 0; i < accounts.content.length; i++) {
-            promises.push(this._syncCalendarView(n30, p30, accounts.content[i].record));
+                this._syncCalendarView(times.ago['10'], times.in['10'], accounts.content[i].record)
+            .then(() => {
+                return this._syncCalendarView(times.in['10'], times.in['30'], accounts.content[i].record)
+            })
+            .then(() => {
+                return this._syncCalendarView(times.ago['30'], times.ago['10'], accounts.content[i].record)
+            })
+            .then(() => {
+                return this._syncCalendarView(times.in['30'], times.in['60'], accounts.content[i].record)
+            })
+            .then(() => {
+                return this._syncCalendarView(times.ago['60'], times.in['30'], accounts.content[i].record)
+            })
+            .then(() => {
+                return this._syncCalendarView(times.in['60'], times.in['120'], accounts.content[i].record)
+            })
+            .then(() => {
+                return this._syncCalendarView(times.ago['120'], times.in['60'], accounts.content[i].record)
+            });
         }
-
-        // Continue with the next 60 days
-
-        // Continue with the last 60 days
     },
 
     _syncCalendarView(start, end, account) {
         const strategy = 'strategy:' + account.get('strategy');
+
+        console.log(`Syncing ${account.get('name')} from ${start.calendar()} to ${end.calendar()}`);
 
         return this.get(strategy).getCalendarView(start, end, account)
             .then(events => {
@@ -97,6 +127,7 @@ export default Ember.Service.extend({
             }
 
             await account.save();
+            this.trigger('update');
             resolve();
         })
     },

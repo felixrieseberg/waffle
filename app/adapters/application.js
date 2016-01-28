@@ -1,11 +1,11 @@
 import PouchDB from 'pouchdb';
 import { Adapter } from 'ember-pouch';
 
-var db = new PouchDB('dev_pouch8');
+var db = new PouchDB('dev_pouch10');
 
 // register globally for console interactions
 window.butterPouch = db;
-PouchDB.debug.enable('*');
+PouchDB.debug.disable('*');
 
 export default Adapter.extend({
     db: db
