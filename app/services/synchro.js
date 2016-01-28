@@ -2,10 +2,11 @@ import Ember from 'ember';
 
 export default Ember.Service.extend(Ember.Evented, {
     store: Ember.inject.service(),
+    isSyncEngineRunning: false,
 
     init() {
         this._super(...arguments);
-        //this.startEngine();
+        this.startEngine();
     },
 
     startEngine() {
@@ -17,7 +18,7 @@ export default Ember.Service.extend(Ember.Evented, {
         Ember.run.cancel(this.get('syncInterval'));
     },
 
-    schedule: function (f) {
+    schedule(f) {
         return Ember.run.later(this, function () {
             f.apply(this);
             this.set('syncInterval', this.schedule(f));
@@ -25,49 +26,68 @@ export default Ember.Service.extend(Ember.Evented, {
     },
 
     async synchronize() {
+        if (this.get('isSyncEngineRunning') === true) {
+            console.log('Sync Engine: Wanted to sync, but synchronization is already running');
+            return;
+        }
+        
+        this.set('isSyncEngineRunning', true);
+
         const store = this.get('store');
         const accounts = await store.findAll('account');
-        const times = {
-            now: moment(),
-            in: {
-                '10': moment().add(10, 'days'),
-                '30': moment().add(20, 'days'),
-                '60': moment().add(60, 'days'),
-                '120': moment().add(120, 'days'),
-                '240': moment().add(240, 'days'),
-                '480': moment().add(480, 'days')
-            },
-            ago: {
-                '10': moment().subtract(10, 'days'),
-                '30': moment().subtract(20, 'days'),
-                '60': moment().subtract(60, 'days'),
-                '120': moment().subtract(120, 'days'),
-                '240': moment().subtract(240, 'days'),
-                '480': moment().subtract(480, 'days')
-            }
-        };
+        const promises = [];
 
-        for (let i = 0; i < accounts.content.length; i++) {
-                this._syncCalendarView(times.ago['10'], times.in['10'], accounts.content[i].record)
-            .then(() => {
-                return this._syncCalendarView(times.in['10'], times.in['30'], accounts.content[i].record)
-            })
-            .then(() => {
-                return this._syncCalendarView(times.ago['30'], times.ago['10'], accounts.content[i].record)
-            })
-            .then(() => {
-                return this._syncCalendarView(times.in['30'], times.in['60'], accounts.content[i].record)
-            })
-            .then(() => {
-                return this._syncCalendarView(times.ago['60'], times.in['30'], accounts.content[i].record)
-            })
-            .then(() => {
-                return this._syncCalendarView(times.in['60'], times.in['120'], accounts.content[i].record)
-            })
-            .then(() => {
-                return this._syncCalendarView(times.ago['120'], times.in['60'], accounts.content[i].record)
-            });
+        for (let i = 0; i < accounts.content.length; i = i + 1) {
+            promises.push(this._syncAccount(accounts.content[i].record));
         }
+        
+        Ember.RSVP.all(promises).then(() => {
+            this.set('isSyncEngineRunning', false);
+        });
+    },
+
+    _inDays(days) {
+        if (days > 0) {
+            return moment().add(days, 'days');
+        } else {
+            return moment().subtract(days * -1, 'days');
+        }
+    },
+    
+    _syncAccount(account) {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            // TODO: Sync in priority windows (three months ago doesn't need to be synced every few minutes)
+            let syncWindows = [
+                { from: -1, to: 1 },
+                { from: 1, to: 10 },
+                { from: -10, to: -1 },
+                { from: 10, to: 20 },
+                { from: 20, to: 30 },
+                { from: -20, to: -10 },
+                { from: -30, to: -20 },
+                { from: 30, to: 40 },
+                { from: 40, to: 50 },
+                { from: 50, to: 60 },
+                { from: -40, to: -30 },
+                { from: -50, to: -40 },
+                { from: -60, to: -50 },
+                { from: 60, to: 70 },
+                { from: 70, to: 80 },
+                { from: 80, to: 90 }
+            ];
+            
+            syncWindows.reduce((current, next) => {
+                return current.then(() => {
+                    const from = this._inDays(next.from);
+                    const to = this._inDays(next.to);
+                    return this._syncCalendarView(from, to, account);
+                })
+            }, Ember.RSVP.resolve().then(() => {
+                // all executed
+                console.log('All sync windows synchronized');
+                resolve();
+            }));
+        });
     },
 
     _syncCalendarView(start, end, account) {
@@ -85,19 +105,30 @@ export default Ember.Service.extend(Ember.Evented, {
         return new Ember.RSVP.Promise(async (resolve) => {
             const store = this.get('store');
             const accountEvents = await account.get('events');
+            const length = accountEvents.length
+            let deleteCount = 0;
+            let processedCount = 0;
 
-            accountEvents.forEach((item) => {
-                if (!item) return;
-                const eventStart = moment(item.start);
-                const eventEnd = moment(item.end);
+            console.log(`Checking ${length} events for deletion, using ${start.calendar()} and ${end.calendar()} as bounds`);
+
+            for (let i = 0; processedCount < length; i = i + 1) {
+                const item = accountEvents.objectAt(i);
+                const eventStart = moment(item.get('start'));
+                const eventEnd = moment(item.get('end'));
 
                 if (eventStart.isAfter(start) && eventStart.isBefore(end) ||
                     eventEnd.isAfter(start) && eventEnd.isBefore(end)) {
+                    deleteCount = deleteCount + 1;
+                    i = i - 1;
                     account.get('events').removeObject(item);
                     item.deleteRecord();
                     item.save();
                 }
-            });
+
+                processedCount = processedCount + 1;
+            }
+
+            console.log(`Deleted ${deleteCount} events`);
 
             await account.save();
             resolve();

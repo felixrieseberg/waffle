@@ -5,6 +5,6 @@ export default Ember.Controller.extend({
 
     init() {
         this._super(...arguments);
-        //this.get('synchro').synchronize();
+        this.get('synchro').synchronize();
     }
 });

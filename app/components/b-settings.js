@@ -33,7 +33,7 @@ export default Ember.Component.extend({
             }
             
             this.get(`strategy:${strategy}`).addAccount().then((newAccount) => {
-                console.log(newAccount);
+                console.log(`Added account ${newAccount.get('name')}`);
             });
         },
         
