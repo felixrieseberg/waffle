@@ -1,19 +1,16 @@
-<div class="app">
-    {{b-sidebar toggleSettings="toggleSettings"}}
+{{b-sidebar toggleSettings="toggleSettings"}}
 
-    <div class="main">
-        <div class="calendarHeader">
-            <h4 class="calendarDate">{{currentDisplayDate}}</h4>
-            <div class="buttons">
-                <button {{action "switchCalendarView" "agendaWeek"}}>Week View</button>
-                <button {{action "switchCalendarView" "month"}}>Month View</button>
-                <button {{action "moveCalendar" "prev"}} class="icon-rewind"></button>
-                <button {{action "moveCalendar" "next"}} class="icon-forward"></button>
-                <button {{action "sync"}} class="icon-in"></button>
-            </div>
-        </div>
-        {{full-calendar events=eventSource header=calendarHeader}}
-    </div>
+<div class="main">
+    {{b-calendar-header
+        targetDate=targetDate
+        currentView=currentView
+        targetDateChangeHandler="targetDateChangeHandler"
+        calendarViewChangeHandler="calendarViewChangeHandler"
+    }}
+    {{b-calendar-monthly
+        targetDate=targetDate
+        accounts=model
+    }}
 </div>
 
 {{b-settings isEnabled=settingsVisible}}

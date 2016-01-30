@@ -13,8 +13,16 @@
 // Style
 html body {
     font-family: "Lato","Geneva CY","Lucida Grande","Arial Unicode MS","Helvetica Neue","Helvetica","Arial",sans-serif;
+    overflow: hidden;
 }
 
 [data-ember-action] {
     cursor: pointer;
+}
+
+div.main {
+    width: calc(100vw - 250px);
+    height: calc(100vh - 20px);
+    padding: 10px;
+    float: right;
 }

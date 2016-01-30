@@ -1,0 +1,6 @@
+{{#each days as |day|}}
+    {{b-calendar-monthly-cell
+        date=day.date
+        isInTargetMonth=day.isInTargetMonth
+    }}
+{{/each}}

@@ -1,0 +1,19 @@
+<ul class="daynames">
+    <li class="dayname weekend">Sunday</li>
+    <li class="dayname">Monday</li>
+    <li class="dayname">Tuesday</li>
+    <li class="dayname">Wednesday</li>
+    <li class="dayname">Thursday</li>
+    <li class="dayname">Friday</li>
+    <li class="dayname weekend">Saturday</li>
+</ul>
+
+<section class="monthly-view">
+    {{#each rows as |row index|}}
+        {{b-calendar-monthly-row
+            startDate=row.startDate
+            events=row.events
+            targetDate=targetDate
+        }}
+    {{/each}}
+</section>
