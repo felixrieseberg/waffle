@@ -1,6 +1,7 @@
 {{#each days as |day|}}
     {{b-calendar-monthly-cell
         date=day.date
+        events=rowEvents
         isInTargetMonth=day.isInTargetMonth
     }}
 {{/each}}

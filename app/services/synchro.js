@@ -1,16 +1,18 @@
 import Ember from 'ember';
+import { Mixin, Debug } from '../mixins/debugger';
 
-export default Ember.Service.extend(Ember.Evented, {
+export default Ember.Service.extend(Ember.Evented, Mixin, {
     store: Ember.inject.service(),
     isSyncEngineRunning: false,
 
     init() {
         this._super(...arguments);
+        this.set('debugger', new Debug('Sync Engine'));
         this.startEngine();
     },
 
     startEngine() {
-        console.log('Started Synchronization Engine');
+        this.log('Started Synchronization Engine');
         this.set('syncInterval', this.schedule(this.get('synchronize')));
     },
 
@@ -27,10 +29,10 @@ export default Ember.Service.extend(Ember.Evented, {
 
     async synchronize() {
         if (this.get('isSyncEngineRunning') === true) {
-            console.log('Sync Engine: Wanted to sync, but synchronization is already running');
+            this.log('Sync Engine: Wanted to sync, but synchronization is already running');
             return;
         }
-        
+
         this.set('isSyncEngineRunning', true);
 
         const store = this.get('store');
@@ -40,7 +42,7 @@ export default Ember.Service.extend(Ember.Evented, {
         for (let i = 0; i < accounts.content.length; i = i + 1) {
             promises.push(this._syncAccount(accounts.content[i].record));
         }
-        
+
         Ember.RSVP.all(promises).then(() => {
             this.set('isSyncEngineRunning', false);
         });
@@ -53,7 +55,7 @@ export default Ember.Service.extend(Ember.Evented, {
             return moment().subtract(days * -1, 'days');
         }
     },
-    
+
     _syncAccount(account) {
         return new Ember.RSVP.Promise((resolve, reject) => {
             // TODO: Sync in priority windows (three months ago doesn't need to be synced every few minutes)
@@ -75,7 +77,7 @@ export default Ember.Service.extend(Ember.Evented, {
                 { from: 70, to: 80 },
                 { from: 80, to: 90 }
             ];
-            
+
             syncWindows.reduce((current, next) => {
                 return current.then(() => {
                     const from = this._inDays(next.from);
@@ -84,7 +86,7 @@ export default Ember.Service.extend(Ember.Evented, {
                 })
             }, Ember.RSVP.resolve().then(() => {
                 // all executed
-                console.log('All sync windows synchronized');
+                this.log('All sync windows synchronized');
                 resolve();
             }));
         });
@@ -93,7 +95,7 @@ export default Ember.Service.extend(Ember.Evented, {
     _syncCalendarView(start, end, account) {
         const strategy = 'strategy:' + account.get('strategy');
 
-        console.log(`Syncing ${account.get('name')} from ${start.calendar()} to ${end.calendar()}`);
+        this.log(`Syncing ${account.get('name')} from ${start.calendar()} to ${end.calendar()}`);
 
         return this.get(strategy).getCalendarView(start, end, account)
             .then(events => {
@@ -109,7 +111,7 @@ export default Ember.Service.extend(Ember.Evented, {
             let deleteCount = 0;
             let processedCount = 0;
 
-            console.log(`Checking ${length} events for deletion, using ${start.calendar()} and ${end.calendar()} as bounds`);
+            this.log(`Checking ${length} events for deletion, using ${start.calendar()} and ${end.calendar()} as bounds`);
 
             for (let i = 0; processedCount < length; i = i + 1) {
                 const item = accountEvents.objectAt(i);
@@ -128,7 +130,7 @@ export default Ember.Service.extend(Ember.Evented, {
                 processedCount = processedCount + 1;
             }
 
-            console.log(`Deleted ${deleteCount} events`);
+            this.log(`Deleted ${deleteCount} events`);
 
             await account.save();
             resolve();

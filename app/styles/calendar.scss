@@ -75,4 +75,20 @@ ul.daynames {
             background-color: #f5f5f5;
         }
     }
+
+    .monthly-day {
+        li {
+            font-weight: 500;
+            font-size: 1rem;
+            margin: 0;
+            padding: 0;
+            -webkit-animation: fadein 1s;
+            animation: fadein 1s;
+        }
+    }
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }

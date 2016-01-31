@@ -1,28 +1,24 @@
 import Ember from 'ember';
+import { Mixin, Debug } from '../mixins/debugger';
 
-export default Ember.Component.extend({
+export default Ember.Component.extend(Mixin, {
     classNames: ['monthly-row'],
 
     init() {
         this._super(...arguments);
-        this.set('days', []);
+        this.set('debugger', new Debug('Calendar MonthRow'));
         Ember.run.once(() => this.setup());
     },
 
     setup() {
-        const days = this.set('days', []);
-        const newDays = this._getDays(this.get('startDate'));
-
-        days.clear();
-        days.pushObjects(newDays);
-
-        const daysNow = this.get('days');
+        this.set('days', this._getDays(this.get('startDate')));
     },
 
     didReceiveAttrs() {
         this._super(...arguments);
-
-        console.log(this.get('events'));
+        if (!this.get('loadingEvents')) {
+            this._loadEvents();
+        }
     },
 
     _getDays(startDate) {
@@ -40,5 +36,34 @@ export default Ember.Component.extend({
         }
 
         return days;
+    },
+
+    _loadEvents() {
+        const self = this;
+        const events = this.get('events');
+        const firstDay = this.get('days.firstObject.date');
+        const lastDay = this.get('days.lastObject.date');
+        let rowEvents = [];
+
+        if (!events) return;
+
+        function load() {
+            if (self.isDestroyed && self.isDestroying) {
+                return;
+            }
+
+            events.forEach((event) => {
+                if (moment(event.get('start')).isBetween(firstDay, lastDay) ||
+                    moment(event.get('end')).isBetween(firstDay, lastDay)) {
+                    rowEvents.push(event);
+                }
+            });
+
+            if (!self.isDestroyed && !self.isDestroying) {
+                self.set('rowEvents', rowEvents);
+            }
+        }
+
+        requestIdleCallback(load, { timeout: 2000 });
     }
 });

@@ -8,7 +8,7 @@ export default Ember.Controller.extend({
 
     init() {
         this._super(...arguments);
-        this.set('targetDate', moment().format('YYYY-MM-DD'));
+        this.set('targetDate', moment().date(1).format('YYYY-MM-DD'));
         this.set('currentView', 'monthly');
     },
 

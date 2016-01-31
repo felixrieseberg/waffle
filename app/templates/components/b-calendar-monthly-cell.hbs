@@ -1,2 +1,8 @@
 <span>{{dateOfMonth}}</span><br />
-<span>Event!</span>
+{{#if dayEvents}}
+    <ul>
+        {{#each dayEvents as |event|}}
+            <li>{{event.title}}</li>
+        {{/each}}
+    </ul>
+{{/if}}
