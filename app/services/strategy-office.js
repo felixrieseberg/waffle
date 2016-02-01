@@ -1,12 +1,12 @@
 import Ember from 'ember';
 import moment from 'moment';
+import { Mixin, Debug } from '../mixins/debugger';
 
-export default Ember.Service.extend({
+export default Ember.Service.extend(Mixin, {
     store: Ember.inject.service(),
 
     oa2: {
         clientID: '',
-        clientSecret: '',
         base: 'https://login.microsoftonline.com/common',
         authUrl: '/oauth2/v2.0/authorize',
         tokenUrl: '/oauth2/v2.0/token',
@@ -15,6 +15,7 @@ export default Ember.Service.extend({
 
     init() {
         this._super(...arguments);
+        this.set('debugger', new Debug('Sync Office'));
     },
 
     addAccount() {
@@ -76,16 +77,16 @@ export default Ember.Service.extend({
                     })
                     .catch((err) => {
                         if (err && err.response && err.response.statusCode === 401) {
-                            console.log('Office 365: Token probably expired, fetching new token');
+                            this.log('Office 365: Token probably expired, fetching new token');
                             return this._updateToken(account)
                                 .then((newToken) => {
                                     return fetchEvents(_url, newToken);
                                 })
                                 .catch((error) => {
-                                   console.log('Office 365: Attempted to getCalendarView', error);
+                                   this.log('Office 365: Attempted to getCalendarView', error);
                                 });
                         } else {
-                            console.log('Office 365: Unknown error during api call:', err);
+                            this.log('Office 365: Unknown error during api call:', err);
                         }
                     });
             }
@@ -194,7 +195,7 @@ export default Ember.Service.extend({
                         const errBody = error.response.body
                         if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
                             // Let's authenticate the current account - again
-                            console.log('Office 365: Tried fetching new token, but code seems to be expired, too.');
+                            this.log('Office 365: Tried fetching new token, but code seems to be expired, too.');
                             this._reauthenticateAfterWarning(account);
                             reject(new Error('code expired'));
                         }

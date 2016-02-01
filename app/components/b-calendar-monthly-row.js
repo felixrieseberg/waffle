@@ -16,9 +16,7 @@ export default Ember.Component.extend(Mixin, {
 
     didReceiveAttrs() {
         this._super(...arguments);
-        if (!this.get('loadingEvents')) {
-            this._loadEvents();
-        }
+        this._loadEvents();
     },
 
     _getDays(startDate) {
@@ -39,31 +37,38 @@ export default Ember.Component.extend(Mixin, {
     },
 
     _loadEvents() {
-        const self = this;
         const events = this.get('events');
-        const firstDay = this.get('days.firstObject.date');
-        const lastDay = this.get('days.lastObject.date');
-        let rowEvents = [];
-
-        if (!events) return;
+        const index = this.get('index');
+        const self = this;
 
         function load() {
-            if (self.isDestroyed && self.isDestroying) {
-                return;
-            }
-
-            events.forEach((event) => {
-                if (moment(event.get('start')).isBetween(firstDay, lastDay) ||
-                    moment(event.get('end')).isBetween(firstDay, lastDay)) {
-                    rowEvents.push(event);
-                }
-            });
-
-            if (!self.isDestroyed && !self.isDestroying) {
-                self.set('rowEvents', rowEvents);
-            }
+            if (self.isDestroyed || self.isDestroyed) return;
+            self.set('rowEvents', self._processEvents(events[index]));
         }
 
-        requestIdleCallback(load, { timeout: 2000 });
-    }
+        if (events && events.length > 0) {
+            requestIdleCallback(load, { timeout: 200 });
+        }
+    },
+
+    _processEvents(events) {
+        const days = this.get('days');
+        let eventsInView = [[], [], [], [], [], [], []];
+
+        if (!days || !days.length) return eventsInView;
+
+        events.forEach((event) => {
+            for (let i = 0; i < days.length; i++) {
+                let startOn = moment(event.get('start')).isSame(days[i].date, 'day');
+                let endOn = moment(event.get('end')).isSame(days[i].date, 'day');
+
+                if (startOn || endOn) {
+                    eventsInView[i].push(event);
+                    break;
+                }
+            }
+        });
+
+        return eventsInView;
+    },
 });

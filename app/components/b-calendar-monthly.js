@@ -5,7 +5,10 @@ import { Mixin, Debug } from '../mixins/debugger';
 export default Ember.Component.extend(Mixin, {
     synchro: Ember.inject.service(),
     classNames: ['calendar'],
+    loadedEvents: [],
+    events: [],
     rows: [],
+    views: [],
 
     firstDay: Ember.computed('targetDate', {
         get() {
@@ -43,10 +46,14 @@ export default Ember.Component.extend(Mixin, {
         Ember.run.once(() => this.setupRows());
     },
 
+    didRender() {
+        // Now that we're rendered, let's preload the prev & the next events
+    },
+
     setupRows() {
-        const rows = this.get('rows');
-        rows.clear();
-        rows.pushObjects(this._getRows(this.get('firstDay')));
+        console.time('Monthly Init');
+        this.get('rows').clear();
+        this.get('rows').pushObjects(this._getRows(this.get('firstDay')));
         this._loadEvents();
     },
 
@@ -55,46 +62,118 @@ export default Ember.Component.extend(Mixin, {
 
         for (let i = 0; i < 6; i++) {
             rows.push({
-                startDate: startDate.clone().add(i * 7, 'days'),
-                events: []
+                startDate: startDate.clone().add(i * 7, 'days').startOf('day'),
+                endDate: startDate.clone().add((i * 7) + 6, 'days').endOf('day')
             });
         }
 
         return rows;
     },
 
-    _loadEvents() {
-        let promises = [];
-        let eventsInView = [];
+    _getOrLoadEvents() {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            const loadedEvents = this.get('loadedEvents');
+            let events = [];
+            let promises = [];
 
+            if (loadedEvents && loadedEvents.length && loadedEvents.length > 0) {
+                resolve(loadedEvents);
+            } else {
+                this.get('accounts').forEach(account => {
+                    promises.push(account.get('events').then(result => {
+                        events = events.concat(result.toArray());
+                    }));
+                });
+
+                Ember.RSVP.all(promises).then(() => {
+                    this.set('loadedEvents', events);
+                    resolve(events);
+                });
+            }
+        });
+    },
+
+    _processEvents(events) {
+        const rows = this.get('rows');
+        let eventsInView = [[], [], [], [], [], []];
+
+        this.log(`Calendar: Processing ${events.length} events`);
+        events.forEach((event) => {
+            for (let i = 0; i < rows.length; i++) {
+                let startBetween = moment(event.get('start')).isBetween(rows[i].startDate, rows[i].endDate);
+                let endBetween = moment(event.get('end')).isBetween(rows[i].startDate, rows[i].endDate);
+
+                if (startBetween || endBetween) {
+                    eventsInView[i].push(event);
+                    break;
+                }
+            }
+        });
+
+        return eventsInView;
+    },
+
+    _loadEvents() {
         const self = this;
         const firstDay = this.get('firstDay');
-        const lastDay = this.get('lastDay');
 
         function load() {
             if (self.isDestroyed && self.isDestroying) {
                 return;
+            };
+
+            const cachedView = self._getCachedView(firstDay)
+
+            if (cachedView) {
+                self.set('events', cachedView.events);
+                console.timeEnd('Monthly Init');
+            } else {
+                self._getOrLoadEvents().then((events, inView) => {
+                    let eventsInView = self._processEvents(events);
+
+                    if (!self.isDestroyed && !self.isDestroying) {
+                        self.set('events', eventsInView);
+                        console.timeEnd('Monthly Init');
+                    }
+
+                    return eventsInView;
+                }).then((eventsInView) => {
+                    requestIdleCallback(() => {
+                        self._addCachedView({
+                            firstDay: firstDay,
+                            events: eventsInView
+                        });
+                    }, { timeout: 5000 });
+                });
             }
-
-            self.get('accounts').forEach(account => {
-                promises.push(account.get('events').then(events => {
-                    self.log(`Calendar: Processing ${events.length} events for ${account.get('username')}`);
-                    events.forEach((event) => {
-                        if (moment(event.get('start')).isBetween(firstDay, lastDay) ||
-                            moment(event.get('end')).isBetween(firstDay, lastDay)) {
-                            eventsInView.push(event);
-                        }
-                    });
-                }));
-            });
-
-            Ember.RSVP.all(promises).then(() => {
-                if (!self.isDestroyed && !self.isDestroying) {
-                    self.set('events', eventsInView);
-                }
-            });
         };
 
-        requestIdleCallback(load, { timeout: 2000 });
+        requestIdleCallback(load, { timeout: 200 });
+    },
+
+    _getCachedView(firstDay) {
+        const views = this.get('views');
+
+        if (views && views.length && views.length > 0) {
+            const exists = views.find(function (item) {
+                return (firstDay.isSame(item.firstDay, 'day'));
+            });
+
+            return exists;
+        }
+    },
+
+    _addCachedView(view) {
+        const views = this.get('views');
+
+        if (views && views.length && views.length > 0) {
+            const exists = views.find(function (item) {
+                return (view.firstDay.isSame(item.firstDay, 'day'));
+            });
+
+            if (exists) return;
+        }
+
+        views.pushObject(view);
     }
 });

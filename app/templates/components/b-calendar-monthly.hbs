@@ -9,11 +9,12 @@
 </ul>
 
 <section class="monthly-view">
-    {{#each rows as |row|}}
+    {{#each rows as |row index|}}
         {{b-calendar-monthly-row
             startDate=row.startDate
             events=events
             targetDate=targetDate
+            index=index
         }}
     {{/each}}
 </section>
