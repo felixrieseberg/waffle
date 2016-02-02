@@ -13,17 +13,7 @@ export default Ember.Component.extend(Mixin, {
     firstDay: Ember.computed('targetDate', {
         get() {
             const now = moment(this.get('targetDate'), 'YYYY-MM-DD');
-            let firstDay;
-
-            // If the first day of the month is a Monday, great
-            // If not, let's find the first Monday
-            if (now.clone().date(1).day() !== 0) {
-                firstDay = now.day(-0);
-            } else {
-                firstDay = now;
-            }
-
-            return firstDay;
+            return (now.clone().date(1).day() !== 0) ? now.day(-0) : now;
         }
     }),
 
@@ -47,11 +37,11 @@ export default Ember.Component.extend(Mixin, {
     },
 
     didRender() {
-        // Now that we're rendered, let's preload the prev & the next events
+        Ember.run.debounce(this, this._prefetchCachedView, 200);
     },
 
     setupRows() {
-        console.time('Monthly Init');
+        this.time('Monthly Init');
         this.get('rows').clear();
         this.get('rows').pushObjects(this._getRows(this.get('firstDay')));
         this._loadEvents();
@@ -93,9 +83,11 @@ export default Ember.Component.extend(Mixin, {
         });
     },
 
-    _processEvents(events) {
-        const rows = this.get('rows');
+    _processEvents(events, rows) {
+        rows = rows || this.get('rows');
         let eventsInView = [[], [], [], [], [], []];
+
+        if (self.isDestroyed || self.isDestroying) return eventsInView;
 
         this.log(`Calendar: Processing ${events.length} events`);
         events.forEach((event) => {
@@ -126,14 +118,14 @@ export default Ember.Component.extend(Mixin, {
 
             if (cachedView) {
                 self.set('events', cachedView.events);
-                console.timeEnd('Monthly Init');
+                self.timeEnd('Monthly Init');
             } else {
-                self._getOrLoadEvents().then((events, inView) => {
+                self._getOrLoadEvents().then((events) => {
                     let eventsInView = self._processEvents(events);
 
                     if (!self.isDestroyed && !self.isDestroying) {
                         self.set('events', eventsInView);
-                        console.timeEnd('Monthly Init');
+                        self.timeEnd('Monthly Init');
                     }
 
                     return eventsInView;
@@ -175,5 +167,30 @@ export default Ember.Component.extend(Mixin, {
         }
 
         views.pushObject(view);
+    },
+
+    _prefetchCachedView() {
+        const self = this;
+
+        function load() {
+            if (self.isDestroyed && self.isDestroying) return;
+
+            const targetDate = moment(self.get('targetDate'), 'YYYY-MM-DD');
+            const nextMonth = targetDate.clone().add(1, 'month').date('1').startOf('day');
+            const firstDay = (nextMonth.day() !== 0) ? nextMonth.day(-0) : nextMonth;
+
+            if (self._getCachedView(firstDay)) return;
+
+            const nextRows = self._getRows(firstDay);
+
+            self._getOrLoadEvents().then((loadedEvents) => {
+                const events = self._processEvents(loadedEvents, nextRows);
+
+                self.log(`Caching view with start date ${firstDay.format('Do MMMM')} `);
+                self._addCachedView({ events, firstDay });
+            });
+        }
+
+        requestIdleCallback(load, { timeout: 60000 });
     }
 });

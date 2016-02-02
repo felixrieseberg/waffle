@@ -3,6 +3,7 @@ export default class Debug {
         this.moduleName = moduleName;
         this.color = this._createColor(),
         this.padLength = 18
+        this.timerStore = [];
         process.env.debug = true;
     }
 
@@ -14,6 +15,27 @@ export default class Debug {
             const title = '%c' + titleContent;
             return console.log(title, colorString, content);
         }
+    }
+
+    timeEnd(name) {
+        const start = Date.now();
+        let foundIndex;
+
+        const runningTimer = this.timerStore.find((item, index) => {
+            if (item.name == name) {
+                foundIndex = index;
+                return true;
+            }
+        });
+
+        if (runningTimer) {
+            this.timerStore.splice(foundIndex, 1);
+            this.log(`${name} took ${start - runningTimer.start}ms`);
+        }
+    }
+
+    time(name) {
+        this.timerStore.push({ start: Date.now(), name });
     }
 
     _createColor() {

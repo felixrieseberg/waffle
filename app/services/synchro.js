@@ -160,7 +160,6 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             }
 
             await account.save();
-            this.trigger('update');
             resolve();
         })
     },
