@@ -26,9 +26,16 @@ export default Ember.Component.extend(Mixin, {
     init() {
         this._super(...arguments);
         Ember.run.once(() => {
-            this.setupRows();
+            this.get('synchro').on('updated', () => this.refresh());
             this.set('debugger', new Debug('Calendar (Monthly)'));
         });
+    },
+
+    refresh() {
+        this.log('Refreshing');
+        this.set('loadedEvents', []);
+        this.set('views', []);
+        this.setupRows();
     },
 
     didReceiveAttrs() {
@@ -46,6 +53,7 @@ export default Ember.Component.extend(Mixin, {
         this.get('rows').pushObjects(this._getRows(this.get('firstDay')));
         this._loadEvents();
     },
+
 
     _getRows(startDate) {
         let rows = [];

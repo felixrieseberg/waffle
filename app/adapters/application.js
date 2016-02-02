@@ -1,7 +1,7 @@
 import PouchDB from 'pouchdb';
 import { Adapter } from 'ember-pouch';
 
-var db = new PouchDB('dev_pouch14', {adapter: 'websql'});
+var db = new PouchDB('dev_pouch22', {adapter: 'websql'});
 
 // register globally for console interactions
 window.butterPouch = db;

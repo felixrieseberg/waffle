@@ -1,21 +1,24 @@
 import Ember from 'ember';
+import { Mixin, Debug } from '../mixins/debugger';
 
-export default Ember.Component.extend({
+export default Ember.Component.extend(Mixin, {
     store: Ember.inject.service('store'),
-    
+    synchro: Ember.inject.service(),
+
     currentView: 'accounts',
-    
+
     init() {
         this._super(...arguments);
+        this.set('debugger', new Debug('Settings'));
         this.send('switchToPreferences');
     },
-    
+
     accounts: Ember.computed({
         get() {
             return this.get('store').findAll('account');
         }
     }),
-    
+
     strategies: Ember.computed({
         get() {
             // TODO: Query for strategies
@@ -31,28 +34,29 @@ export default Ember.Component.extend({
             if (!strategy || strategy.length < 1) {
                 return;
             }
-            
+
             this.get(`strategy:${strategy}`).addAccount().then((newAccount) => {
-                console.log(`Added account ${newAccount.get('name')}`);
+                this.log(`Added account ${newAccount.get('name')}`);
+                this.get('synchro').synchronize();
             });
         },
-        
+
         removeAccount(account) {
             account.deleteRecord();
-            
+
             // TODO: Implement undo
             account.save();
         },
-        
+
         toggleVisibility() {
             this.toggleProperty('isEnabled');
         },
-        
+
         switchToAccounts() {
             this.set('isAccounts', true);
             this.set('isPreferences', false);
         },
-        
+
         switchToPreferences() {
             this.set('isAccounts', false);
             this.set('isPreferences', true);

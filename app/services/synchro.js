@@ -83,12 +83,11 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                     const from = this._inDays(next.from);
                     const to = this._inDays(next.to);
                     return this._syncCalendarView(from, to, account);
-                })
-            }, Ember.RSVP.resolve().then(() => {
-                // all executed
-                this.log('All sync windows synchronized');
-                resolve();
-            }));
+                });
+            }, Ember.RSVP.resolve()).then(() => {
+                this.trigger('updated');
+                this.log('All Updated');
+            });
         });
     },
 

@@ -2,11 +2,17 @@ import Ember from 'ember';
 
 export default Ember.Component.extend({
     classNames: ['monthly-day'],
-    classNameBindings: ['isInTargetMonth::outside-month'],
+    classNameBindings: ['isInTargetMonth::outside-month', 'isToday:is-today'],
 
     dateOfMonth: Ember.computed('date', {
         get() {
             return this.get('date').format('D');
+        }
+    }),
+
+    isToday: Ember.computed('date', {
+        get() {
+            return this.get('date').isSame(Date.now(), 'day');
         }
     }),
 
