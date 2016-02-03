@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import moment from 'moment';
 import { Mixin, Debug } from '../mixins/debugger';
+import { processArrayAsync } from '../utils/performance';
 
 export default Ember.Component.extend(Mixin, {
     synchro: Ember.inject.service(),
@@ -44,7 +45,7 @@ export default Ember.Component.extend(Mixin, {
     },
 
     didRender() {
-        Ember.run.debounce(this, this._prefetchCachedView, 200);
+        Ember.run.debounce(this, this._prefetchCachedViews, 200);
     },
 
     setupRows() {
@@ -91,26 +92,30 @@ export default Ember.Component.extend(Mixin, {
         });
     },
 
-    _processEvents(events, rows) {
-        rows = rows || this.get('rows');
-        let eventsInView = [[], [], [], [], [], []];
+    _processEvents(events, rows, eventsInView) {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            if (this.isDestroyed || this.isDestroying) return;
 
-        if (self.isDestroyed || self.isDestroying) return eventsInView;
+            rows = rows || this.get('rows');
+            events = events.toArray();
+            eventsInView = [[], [], [], [], [], []];
 
-        this.log(`Calendar: Processing ${events.length} events`);
-        events.forEach((event) => {
-            for (let i = 0; i < rows.length; i++) {
-                let startBetween = moment(event.get('start')).isBetween(rows[i].startDate, rows[i].endDate);
-                let endBetween = moment(event.get('end')).isBetween(rows[i].startDate, rows[i].endDate);
+            this.log(`Calendar: Processing ${events.length} events`);
 
-                if (startBetween || endBetween) {
-                    eventsInView[i].push(event);
-                    break;
+            processArrayAsync(events, (event) => {
+                for (let i = 0; i < rows.length; i++) {
+                    let startBetween = moment(event.get('start')).isBetween(rows[i].startDate, rows[i].endDate);
+                    let endBetween = moment(event.get('end')).isBetween(rows[i].startDate, rows[i].endDate);
+
+                    if (startBetween || endBetween) {
+                        eventsInView[i].push(event);
+                        break;
+                    }
                 }
-            }
+            }, 25, this).then(() => {
+                resolve(eventsInView);
+            });
         });
-
-        return eventsInView;
     },
 
     _loadEvents() {
@@ -128,8 +133,8 @@ export default Ember.Component.extend(Mixin, {
                 self.set('events', cachedView.events);
                 self.timeEnd('Monthly Init');
             } else {
-                self._getOrLoadEvents().then((events) => {
-                    let eventsInView = self._processEvents(events);
+                self._getOrLoadEvents().then(async (events) => {
+                    let eventsInView = await self._processEvents(events);
 
                     if (!self.isDestroyed && !self.isDestroying) {
                         self.set('events', eventsInView);
@@ -177,22 +182,27 @@ export default Ember.Component.extend(Mixin, {
         views.pushObject(view);
     },
 
-    _prefetchCachedView() {
+    _prefetchCachedViews() {
+        this._prefetchCachedViewForMonth(-1);
+        this._prefetchCachedViewForMonth(1);
+    },
+
+    _prefetchCachedViewForMonth(month) {
         const self = this;
 
         function load() {
             if (self.isDestroyed && self.isDestroying) return;
 
             const targetDate = moment(self.get('targetDate'), 'YYYY-MM-DD');
-            const nextMonth = targetDate.clone().add(1, 'month').date('1').startOf('day');
-            const firstDay = (nextMonth.day() !== 0) ? nextMonth.day(-0) : nextMonth;
+            const newMonth = targetDate.clone().add(month, 'month').date('1').startOf('day');
+            const firstDay = (newMonth.day() !== 0) ? newMonth.day(-0) : newMonth;
 
             if (self._getCachedView(firstDay)) return;
 
             const nextRows = self._getRows(firstDay);
 
-            self._getOrLoadEvents().then((loadedEvents) => {
-                const events = self._processEvents(loadedEvents, nextRows);
+            self._getOrLoadEvents().then(async (loadedEvents) => {
+                const events = await self._processEvents(loadedEvents, nextRows);
 
                 self.log(`Caching view with start date ${firstDay.format('Do MMMM')} `);
                 self._addCachedView({ events, firstDay });

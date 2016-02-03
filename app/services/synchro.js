@@ -45,7 +45,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
             console.log(accounts.content[i].record.get('sync'));
-            //promises.push(this.synchronizeAccount(accounts.content[i].record, false));
+            promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
         Ember.RSVP.all(promises).then(() => {
@@ -74,17 +74,22 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
             let events = [];
 
-            this.get(strategy).getCalendarView(start, end, account, syncOptions).then((events, deltaToken) => {
-                console.log(events);
-                if (deltaToken) {
-                    console.log(deltaToken);
-                    account.set('sync', { startDate, endDate, deltaToken });
+            this.get(strategy).getCalendarView(start, end, account, syncOptions).then((result) => {
+                if (result.deltaToken) {
+                    let startDate = start.toString();
+                    let endDate = end.toString();
+                    account.set('sync', { startDate, endDate, deltaToken: result.deltaToken });
                     account.save();
                 }
 
-                return this._replaceEventsInDB(events, account).then(() => {
-                    this.trigger('update');
-                });
+                return this._replaceEventsInDB(result.events, account).then(() => this.trigger('update'));
+
+                // Todo: Handle this logic
+                // if (isInitial) {
+                //     return this._replaceEventsInDB(result.events, account).then(() => this.trigger('update'));
+                // } else {
+                //     return this._updateEventsInDB(result.events, account).then(() => this.trigger('update'));
+                // }
             });
         });
     },
