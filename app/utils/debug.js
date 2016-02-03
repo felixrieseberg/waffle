@@ -41,7 +41,7 @@ export default class Debug {
     _createColor() {
         let h = this._random(1, 360);
         let s = this._random(60, 100);
-        let l = this._random(60, 100);
+        let l = this._random(0, 50);
         return 'hsl(' + h + ',' + s + '%,' + l + '%)';
     }
 

@@ -37,7 +37,7 @@ export default Ember.Component.extend(Mixin, {
 
             this.get(`strategy:${strategy}`).addAccount().then((newAccount) => {
                 this.log(`Added account ${newAccount.get('name')}`);
-                this.get('synchro').synchronize();
+                this.get('synchro').synchronizeAccount(newAccount, true);
             });
         },
 

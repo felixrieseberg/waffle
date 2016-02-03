@@ -26,7 +26,7 @@ export default Ember.Component.extend(Mixin, {
     init() {
         this._super(...arguments);
         Ember.run.once(() => {
-            this.get('synchro').on('updated', () => this.refresh());
+            this.get('synchro').on('update', () => this.refresh());
             this.set('debugger', new Debug('Calendar (Monthly)'));
         });
     },
