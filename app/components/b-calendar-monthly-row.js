@@ -59,8 +59,8 @@ export default Ember.Component.extend(Mixin, {
 
         events.forEach((event) => {
             for (let i = 0; i < days.length; i++) {
-                let startOn = moment(event.get('start')).isSame(days[i].date, 'day');
-                let endOn = moment(event.get('end')).isSame(days[i].date, 'day');
+                let startOn = moment(new Date(event.get('start'))).isSame(days[i].date, 'day');
+                let endOn = moment(new Date(event.get('end'))).isSame(days[i].date, 'day');
 
                 if (startOn || endOn) {
                     eventsInView[i].push(event);

@@ -1,10 +1,12 @@
-<span>{{dateOfMonth}}</span><br />
+<span class="day-date">{{unbound dateOfMonth}}</span><br />
 {{#if dayEvents}}
     <ul>
         {{#each dayEvents as |event|}}
             <li>
-                <span class="label">{{event.title}}</span>
-                <span class="time">{{moment-hour event.start}}</span>
+                <span class="event-time">{{moment-hour event.start}}</span>
+                <div class="event-label">
+                    <span>{{event.title}}</span>
+                </div>
             </li>
         {{/each}}
     </ul>

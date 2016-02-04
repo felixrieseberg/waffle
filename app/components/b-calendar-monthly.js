@@ -103,8 +103,8 @@ export default Ember.Component.extend(Mixin, {
 
             processArrayAsync(events, (event) => {
                 for (let i = 0; i < rows.length; i++) {
-                    let startBetween = moment(event.get('start')).isBetween(rows[i].startDate, rows[i].endDate);
-                    let endBetween = moment(event.get('end')).isBetween(rows[i].startDate, rows[i].endDate);
+                    let startBetween = moment(new Date(event.get('start'))).isBetween(rows[i].startDate, rows[i].endDate);
+                    let endBetween = moment(new Date(event.get('end'))).isBetween(rows[i].startDate, rows[i].endDate);
 
                     if (startBetween || endBetween) {
                         eventsInView[i].push(event);

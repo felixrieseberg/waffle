@@ -69,26 +69,31 @@ ul.daynames {
         height: 100%;
         padding: 4px;
 
+        .day-date {
+            font-weight: 700;
+        }
+
         li {
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 1.2rem;
             margin: 0;
             padding: 0;
             -webkit-animation: fadein 1s;
             animation: fadein 1s;
-            white-space: nowrap;
+            list-style-type: none;
+            width: 100%;
 
-            span.label {
-                display: inline-block;
+            div.event-label {
                 white-space: nowrap;
-                text-overflow: ellipsis;
-                width: 70%;
                 overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            span.time {
-                display: inline-block;
+            span.event-time {
+                font-weight: 300;
                 float: right;
+                white-space: nowrap;
+                color: $butter-color;
             }
         }
     }
@@ -102,7 +107,8 @@ ul.daynames {
     }
 
     div.is-today {
-        border: 2px solid $butter-color;
+        border: 1px solid $butter-color;
+        background-color: $butter-color-light;
     }
 }
 
