@@ -36,7 +36,7 @@ export default Ember.Component.extend(Mixin, {
         this.log('Refreshing');
         this.set('loadedEvents', []);
         this.set('views', []);
-        this.setupRows();
+        this._loadEvents();
     },
 
     didReceiveAttrs() {
@@ -54,7 +54,6 @@ export default Ember.Component.extend(Mixin, {
         this.get('rows').pushObjects(this._getRows(this.get('firstDay')));
         this._loadEvents();
     },
-
 
     _getRows(startDate) {
         let rows = [];

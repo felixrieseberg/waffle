@@ -1,7 +1,10 @@
 import Ember from 'ember';
 
 export function processArrayAsync(array, fn, chunk, context) {
-    return new Ember.RSVP.Promise(resolve => {
+    return new Ember.RSVP.Promise((resolve, reject) => {
+        if (!array || !array.length) return reject();
+        if (array.length === 0) return resolve();
+
         context = context || window;
         chunk = chunk || 25;
         let index = 0;

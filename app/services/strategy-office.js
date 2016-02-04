@@ -88,11 +88,12 @@ export default Ember.Service.extend(Mixin, {
 
     _fetchEvents(url, token, syncOptions, account) {
         return new Ember.RSVP.Promise((resolve) => {
-            let events = [], deltaLink, deltaToken;
+            let events = [], occurences = [], masters = [],
+                firstUrl = url,
+                deltaToken;
 
-            if (syncOptions.useDelta) {
-                let deltaToken = account.get('sync.deltaToken');
-                deltaLink = url + `&deltatoken=${deltaToken}`;
+            if (syncOptions.useDelta && account.get('sync.deltaToken')) {
+                firstUrl += `&$deltatoken=${account.get('sync.deltaToken')}`;
             }
 
             const fetch = (_url, _token, _trackChanges) => {
@@ -102,38 +103,39 @@ export default Ember.Service.extend(Mixin, {
                 return this._makeApiCall(_url, _token, header).then((response) => {
                     if (!response || !response.ok || !response.body) reject(response);
                     response.body.value.forEach((item) => {
-                        let event = {
-                            start: moment(item.Start.DateTime + 'Z').format(),
-                            end: moment(item.End.DateTime + 'Z').format(),
-                            title: item.Subject,
-                            editable: false,
-                            providerId: item.Id
-                        };
-
-                        if (trackChanges && item.Reason) {
-                            event.deleted = true
+                        if (item.Type === 'SeriesMaster') {
+                            masters.push(item);
                         }
 
-                        events.push(event);
-                    });
+                        if (item.Type === 'Occurrence') {
+                            return occurences.push(item);
+                        }
 
-                    console.log(response);
+                        events.push(this._makeEvent(item));
+                    });
 
                     if (response.body['@odata.nextLink']) {
                         return fetch(response.body['@odata.nextLink'], _token, false);
-                    } else if (trackChanges && response.body['@odata.deltaLink']) {
+                    } else if (syncOptions.trackChanges && response.body['@odata.deltaLink']) {
                         deltaToken = this._findDeltaToken(response) || deltaToken;
                         return fetch(response.body['@odata.deltaLink'], _token, false);
                     } else {
+                        // Process all instances before returning
+                        occurences.forEach((instance) => events.push(this._makeEventFromOccurence(instance, masters)));
+
                         this.log('Done fetching events');
-                        return resolve(events, deltaToken);
+                        return resolve({events, deltaToken});
                     }
                 }).catch((err, response) => {
-                    if (err && err.response && err.response.statusCode === 401) {
+                    const er = err.response || {};
+                    if (er.statusCode && er.statusCode === 401) {
                         this.log('Office 365: Token probably expired, fetching new token');
                         return this._updateToken(account)
                             .then(newToken => { return fetch(_url, newToken) })
                             .catch(error => { this.log('Office 365: Attempted to getCalendarView', error) });
+                    } else if (er.statusCode && er.statusCode === 410) {
+                        this.log('Office 365: Sync Status not found, refetching');
+                        return fetch(url, _token, true);
                     } else {
                         this.log('Office 365: Unknown error during api call:');
                         console.log(err, response);
@@ -141,8 +143,30 @@ export default Ember.Service.extend(Mixin, {
                 });
             }
 
-            fetch(deltaLink, token, syncOptions.trackChanges);
+            console.log(firstUrl);
+            fetch(firstUrl, token, syncOptions.trackChanges);
         });
+    },
+
+    _makeEvent(inputEvent) {
+        return {
+            start: moment(inputEvent.Start.DateTime + 'Z').format(),
+            end: moment(inputEvent.End.DateTime + 'Z').format(),
+            title: inputEvent.Subject,
+            editable: false,
+            providerId: inputEvent.Id
+        }
+    },
+
+    _makeEventFromOccurence(occurence, masters) {
+        const master = masters.find((item) => { return (item.Id === occurence.SeriesMasterId) });
+
+        if (master) {
+            occurence.Subject = master.Subject;
+            occurence.Body = master.Body;
+        }
+
+        return this._makeEvent(occurence);
     },
 
     /**
@@ -155,11 +179,7 @@ export default Ember.Service.extend(Mixin, {
             return null;
         }
 
-        console.log(response.body['@odata.deltaLink']);
-
-        let tokenPosition = response.body['@odata.deltaLink'].indexOf('deltatoken=');
-
-        console.log(response.body['@odata.deltaLink'].slice(tokenPosition + 11));
+        let tokenPosition = response.body['@odata.deltaLink'].lastIndexOf('deltatoken=');
         return response.body['@odata.deltaLink'].slice(tokenPosition + 11);
     },
 

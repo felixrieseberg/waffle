@@ -2,7 +2,7 @@ import Ember from 'ember';
 import moment from 'moment';
 import { inDays } from '../utils/time-utils';
 import { Mixin, Debug } from '../mixins/debugger';
-
+import { processArrayAsync } from '../utils/performance';
 
 export default Ember.Service.extend(Ember.Evented, Mixin, {
     store: Ember.inject.service(),
@@ -44,13 +44,10 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         const promises = [];
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
-            console.log(accounts.content[i].record.get('sync'));
             promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
-        Ember.RSVP.all(promises).then(() => {
-            this.set('isSyncEngineRunning', false);
-        });
+        Ember.RSVP.all(promises).then(() => this.set('isSyncEngineRunning', false));
     },
 
     /**
@@ -74,15 +71,19 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
             let events = [];
 
-            this.get(strategy).getCalendarView(start, end, account, syncOptions).then((result) => {
+            return this.get(strategy).getCalendarView(start, end, account, syncOptions).then((result) => {
                 if (result.deltaToken) {
+                    this.log(`New Delta Token for ${account.get('name')}`);
                     let startDate = start.toString();
                     let endDate = end.toString();
                     account.set('sync', { startDate, endDate, deltaToken: result.deltaToken });
                     account.save();
                 }
 
-                return this._replaceEventsInDB(result.events, account).then(() => this.trigger('update'));
+                return this._replaceEventsInDB(result.events, account).then(() => {
+                    this.trigger('update')
+                    return resolve();
+                });
 
                 // Todo: Handle this logic
                 // if (isInitial) {
@@ -175,18 +176,22 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
     _replaceEventsInDB(events, account) {
         return new Ember.RSVP.Promise(async (resolve, reject) => {
             const store = this.get('store');
-            const accountEvents = await account.get('events');
-            const newEvents = [];
+            let newEvents = [];
 
             this.log('Replacing events in database');
 
-            // Delete all of them
-            if (accountEvents && accountEvents.length && accountEvents.length > 0) {
-                accountEvents.forEach((item) => {
-                    item.deleteRecord();
-                    item.save();
-                });
-            }
+            // Delete all old events
+            account.get('events').then(accEvents => {
+                // Delete all of them
+                processArrayAsync(accEvents.toArray(), (event) => {
+                    if (event) {
+                        event.deleteRecord();
+                        event.save();
+                    } else {
+                        console.count('event undefined');
+                    }
+                }, 25, this).then(() => this.log('Deleted old events'));
+            });
 
             // Replace them
             for (let i = 0; i < events.length; i++) {
