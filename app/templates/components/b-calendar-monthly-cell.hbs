@@ -2,12 +2,20 @@
 {{#if dayEvents}}
     <ul>
         {{#each dayEvents as |event|}}
-            <li>
-                <span class="event-time">{{moment-hour event.start}}</span>
-                <div class="event-label">
-                    <span>{{event.title}}</span>
-                </div>
-            </li>
+            {{#if event.isAllDay}}
+                <li>
+                    <div class="event-label is-all-day">
+                        <span>{{event.title}}</span>
+                    </div>
+                </li>
+            {{else}}
+                <li>
+                    <span class="event-time">{{moment-hour event.start}}</span>
+                    <div class="event-label">
+                        <span>{{event.title}}</span>
+                    </div>
+                </li>
+            {{/if}}
         {{/each}}
     </ul>
 {{/if}}

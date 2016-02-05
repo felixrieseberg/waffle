@@ -6,8 +6,8 @@ export default Ember.Service.extend(Mixin, {
     store: Ember.inject.service(),
 
     oa2: {
-        clientID: '',
-        clientSecret: '',
+        clientID: 'b5f61636-8c63-4a7c-b4a3-6af6df33ad15',
+        //clientSecret: 'vroVRihjX7S6T7135Cv5odz',
         base: 'https://login.microsoftonline.com/common',
         authUrl: '/oauth2/v2.0/authorize',
         tokenUrl: '/oauth2/v2.0/token',
@@ -62,15 +62,24 @@ export default Ember.Service.extend(Mixin, {
         return jwt.preferred_username;
     },
 
-    authenticate() {
+    authenticate(silent) {
         return new Ember.RSVP.Promise((resolve, reject) => {
             const BrowserWindow = require('electron').remote.BrowserWindow;
-            const authUrl = this.oa2.base + this.oa2.authUrl + '?client_id=' + this.oa2.clientID + '&response_type=code&scope=' + this.oa2.scopes.join(' ') + '&redirect_uri=https%3A%2F%2Fredirect.butter';
+            const response = (this.oa2.clientSecret) ? '&response_type=code' : '&response_type=id_token+token';
+            const redirect = '&redirect_uri=https%3A%2F%2Fredirect.butter';
+            const scopes = '&scope=' + this.oa2.scopes.join(' ');
+            const client = '?client_id=' + this.oa2.clientID;
+            const nonce = (this.oa2.clientSecret) ? '' : '&response_mode=fragment&state=12345&nonce=678910';
+            const prompt = (silent) ? '&prompt=none' : '';
+            const authUrl = this.oa2.base + this.oa2.authUrl + client + response + scopes + redirect + prompt + nonce;
 
             let authWindow = new BrowserWindow({ width: 800, height: 600, show: false, 'node-integration': false });
 
             authWindow.loadURL(authUrl);
-            authWindow.show();
+
+            if (!silent) {
+                authWindow.show();
+            }
 
             authWindow.webContents.on('will-navigate', (event, url) => {
                 return this._handleCallback(url, authWindow, resolve, reject);
@@ -143,19 +152,26 @@ export default Ember.Service.extend(Mixin, {
                 });
             }
 
-            console.log(firstUrl);
             fetch(firstUrl, token, syncOptions.trackChanges);
         });
     },
 
     _makeEvent(inputEvent) {
-        return {
-            start: moment(inputEvent.Start.DateTime + 'Z').format(),
-            end: moment(inputEvent.End.DateTime + 'Z').format(),
+        const start = moment(new Date(inputEvent.Start.DateTime + 'Z'));
+        const end = moment(new Date(inputEvent.End.DateTime + 'Z'));
+        const isAllDay = (inputEvent.IsAllDay || !start.isSame(end, 'day')) ? true : false;
+
+        let event = {
+            start: start.format(),
+            end: end.format(),
             title: inputEvent.Subject,
             editable: false,
-            providerId: inputEvent.Id
+            providerId: inputEvent.Id,
+            showAs: inputEvent.showAs,
+            isAllDay: isAllDay
         }
+
+        return event;
     },
 
     _makeEventFromOccurence(occurence, masters) {
@@ -164,6 +180,7 @@ export default Ember.Service.extend(Mixin, {
         if (master) {
             occurence.Subject = master.Subject;
             occurence.Body = master.Body;
+            occurence.IsAllDay = master.IsAllDay;
         }
 
         return this._makeEvent(occurence);
@@ -253,7 +270,7 @@ export default Ember.Service.extend(Mixin, {
                         if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
                             // Let's authenticate the current account - again
                             this.log('Office 365: Tried fetching new token, but code seems to be expired, too.');
-                            this._reauthenticateAfterWarning(account);
+                            this._reauthenticate(account);
                             reject(new Error('code expired'));
                         }
                     } else {
@@ -265,10 +282,14 @@ export default Ember.Service.extend(Mixin, {
 
     _handleCallback(url, win, resolve, reject) {
         const raw_code = /code=([^&]*)/.exec(url) || null;
+        const raw_token = /access_token=([^&]*)/.exec(url) || null;
+        const raw_id= /id_token=([^&]*)/.exec(url) || null;
         const code = (raw_code && raw_code.length > 1) ? raw_code[1] : null;
+        const token = (raw_token && raw_token.length > 1) ? raw_token[1] : null;
+        const id = (raw_id && raw_id.length > 1) ? raw_id[1] : null;
         const err = /\?error=(.+)$/.exec(url);
 
-        if (code || err) {
+        if (code || err || token) {
             win.destroy();
 
             if (code) {
@@ -276,12 +297,33 @@ export default Ember.Service.extend(Mixin, {
                     response.code = code;
                     resolve(response);
                 });
-            }
-
-            if (err) {
+            } else if (token) {
+                resolve({
+                    id_token: id,
+                    access_token: token
+                });
+            } else if (err) {
                 reject(err);
             }
         }
+    },
+
+    _reauthenticate(account) {
+        return new Ember.RSVP.Promise((resolve, reject) => {
+            this.authenticate(silent).then((response) => {
+                if (!response) return;
+
+                account.setProperties({
+                    name: 'Office 365',
+                    username: response.id_token ? this.getEmailFromToken(response.id_token) : 'O365',
+                    strategy: 'office',
+                    oauth: response
+                });
+                account.save();
+
+                resolve(account);
+            }).catch((err) => reject(err));
+        });
     },
 
     _reauthenticateAfterWarning(account) {
@@ -292,13 +334,11 @@ export default Ember.Service.extend(Mixin, {
                 onClick: (notification) => {
                     this.authenticate()
                         .then((response) => {
-                            if (!response || !response.id_token) {
-                                return;
-                            }
+                            if (!response) return;
 
                             account.setProperties({
                                 name: 'Office 365',
-                                username: this.getEmailFromToken(response.id_token),
+                                username: response.id_token ? this.getEmailFromToken(response.id_token) : 'O365',
                                 strategy: 'office',
                                 oauth: response
                             });

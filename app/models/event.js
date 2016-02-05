@@ -12,7 +12,7 @@ export default Model.extend({
     //CreatedDateTime: "2016-01-19T23:55:40.5749569Z"
     end: DS.attr('string'),
     //Importance: "Normal"
-    IsAllDay: DS.attr('boolean', { defaultValue: false }),
+    isAllDay: DS.attr('boolean', { defaultValue: false }),
     //IsCancelled: false
     //IsOrganizer: true
     //IsReminderOn: false
@@ -26,8 +26,7 @@ export default Model.extend({
     //ResponseRequested: true
     //ResponseStatus: Object
     //Sensitivity: "Normal"
-    //SeriesMasterId: null
-    //ShowAs: "Busy"
+    showAs: DS.attr('string'),
     start: DS.attr('string'),
     title: DS.attr('string')
     //Type: "SingleInstance"
