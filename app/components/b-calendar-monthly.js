@@ -5,6 +5,7 @@ import { processArrayAsync } from '../utils/performance';
 
 export default Ember.Component.extend(Mixin, {
     synchro: Ember.inject.service(),
+    store: Ember.inject.service(),
     classNames: ['calendar'],
     loadedEvents: [],
     events: [],
@@ -71,16 +72,25 @@ export default Ember.Component.extend(Mixin, {
     _getOrLoadEvents() {
         return new Ember.RSVP.Promise((resolve, reject) => {
             const loadedEvents = this.get('loadedEvents');
+            const store = this.get('store');
             let events = [];
             let promises = [];
 
             if (loadedEvents && loadedEvents.length && loadedEvents.length > 0) {
                 resolve(loadedEvents);
             } else {
+                // this.get('accounts').forEach(account => {
+                //     promises.push(account.get('events').then(result => {
+                //         events = events.concat(result.toArray());
+                //     }));
+                // });
+
                 this.get('accounts').forEach(account => {
-                    promises.push(account.get('events').then(result => {
-                        events = events.concat(result.toArray());
-                    }));
+                    promises.push(store.query('event', ['account_id', account.get('id')])
+                        .then(result => {
+                            events = events.concat(result.toArray());
+                        })
+                    );
                 });
 
                 Ember.RSVP.all(promises).then(() => {

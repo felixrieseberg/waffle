@@ -45,9 +45,13 @@ export default Ember.Service.extend(Mixin, {
             const oauth = account.get('oauth');
             const url = `${baseUrl}?startDateTime=${startDate}&endDateTime=${endDate}`;
 
-            return this._fetchEvents(url, oauth.access_token, syncOptions, account).then((events, deltaToken) => {
-                resolve(events, deltaToken);
-            });
+            return this._fetchEvents(url, oauth.access_token, syncOptions, account)
+                .then((events, deltaToken) => {
+                    resolve(events, deltaToken);
+                })
+                .catch((error) => {
+                    this.notifications.error('O365 account corrupted, please delete and add again');
+                });
         });
     },
 
@@ -165,9 +169,9 @@ export default Ember.Service.extend(Mixin, {
             start: start.format(),
             end: end.format(),
             title: inputEvent.Subject,
-            editable: false,
             providerId: inputEvent.Id,
             showAs: inputEvent.showAs,
+            isEditable: false,
             isAllDay: isAllDay
         }
 

@@ -1,12 +1,11 @@
 import DS from 'ember-data';
-import { Model } from 'ember-pouch';
 
-export default Model.extend({
+export default DS.Model.extend({
     providerId: DS.attr('string'),
     //Attendees: Array[0]
     body: DS.attr('string'),
     bodyPreview: DS.attr('string'),
-    editable: DS.attr('boolean'),
+    isEditable: DS.attr('boolean'),
     //Categories: Array[0]
     //ChangeKey: "f46rRLd++ECpaAOXpXOchQACqzBkoQ=="
     //CreatedDateTime: "2016-01-19T23:55:40.5749569Z"
@@ -28,6 +27,7 @@ export default Model.extend({
     //Sensitivity: "Normal"
     showAs: DS.attr('string'),
     start: DS.attr('string'),
-    title: DS.attr('string')
+    title: DS.attr('string'),
+    account: DS.belongsTo('account', {async: true})
     //Type: "SingleInstance"
 });

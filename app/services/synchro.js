@@ -44,7 +44,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         const promises = [];
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
-            promises.push(this.synchronizeAccount(accounts.content[i].record, false));
+            //promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
         Ember.RSVP.all(promises).then(() => this.set('isSyncEngineRunning', false));
@@ -65,8 +65,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
             this.log(`Synchronizing account`);
 
-            const start = inDays(-365);
-            const end = inDays(365);
+            const start = inDays(-2);
+            const end = inDays(2);
             const strategy = 'strategy:' + account.get('strategy');
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
             let events = [];
@@ -91,6 +91,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                 // } else {
                 //     return this._updateEventsInDB(result.events, account).then(() => this.trigger('update'));
                 // }
+            }).catch((error) => {
+                this.notifications.error(`Account ${account.get('name')} with user ${account.get('username')} is corrupted, please delete and add again.`);
             });
         });
     },
@@ -180,18 +182,23 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
             this.log('Replacing events in database');
 
+            store.query('event', ['account_id', '=', account.get('id')])
+                .then((result) => {
+                    console.log(result);
+                });
+
             // Delete all old events
-            account.get('events').then(accEvents => {
-                // Delete all of them
-                processArrayAsync(accEvents.toArray(), (event) => {
-                    if (event) {
-                        event.deleteRecord();
-                        event.save();
-                    } else {
-                        console.count('event undefined');
-                    }
-                }, 25, this).then(() => this.log('Deleted old events'));
-            });
+            // account.get('events').then(accEvents => {
+            //     // Delete all of them
+            //     processArrayAsync(accEvents.toArray(), (event) => {
+            //         if (event) {
+            //             event.deleteRecord();
+            //             event.save();
+            //         } else {
+            //             console.count('event undefined');
+            //         }
+            //     }, 25, this).then(() => this.log('Deleted old events'));
+            // });
 
             // Replace them
             for (let i = 0; i < events.length; i++) {
@@ -200,7 +207,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                     start: events[i].start,
                     end: events[i].end,
                     title: events[i].title,
-                    editable: events[i].editable
+                    editable: events[i].editable,
+                    account: account
                 });
 
                 newEvents.push(newEvent);

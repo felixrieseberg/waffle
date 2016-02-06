@@ -10,7 +10,9 @@
   "scripts": {
     "build": "ember build",
     "start": "ember server",
-    "test": "ember test"
+    "test": "ember test",
+    "rebuild-sqlite3": "./node_modules/.bin/electron-rebuild",
+    "reset": "rm ./database/butter_dev.sqlite && cd ./database && knex migrate:latest && cd .. && ember electron"
   },
   "repository": "",
   "engines": {
@@ -80,7 +82,10 @@
     }
   },
   "dependencies": {
+    "bookshelf": "^0.9.1",
+    "knex": "^0.9.0",
     "node-outlook": "^1.1.4",
+    "sqlite3": "^3.1.1",
     "superagent": "^1.7.1"
   }
 }
