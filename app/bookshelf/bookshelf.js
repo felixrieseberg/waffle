@@ -1,13 +1,12 @@
-import Ember from 'ember';
+import Debug from '../utils/debug';
 
-console.log(__dirname);
 const filename = require('path').resolve(__dirname, '..', 'database', 'butter_dev.sqlite');
 const dbConfig = {
     client: 'sqlite3',
     connection: { filename }
 };
 
-console.log(filename);
+new Debug('Bookshelf').log('Using SQLite database in ' + filename);
 const knex = requireNode('knex')(dbConfig);
 const bookshelf = requireNode('bookshelf')(knex);
 

@@ -1,5 +1,4 @@
 import Ember from 'ember';
-import moment from 'moment';
 import { inDays } from '../utils/time-utils';
 import { Mixin, Debug } from '../mixins/debugger';
 import { processArrayAsync } from '../utils/performance';
@@ -24,7 +23,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
     },
 
     schedule(f) {
-        return Ember.run.later(this, function () {
+        return Ember.run.later(this, () => {
             f.apply(this);
             this.set('syncInterval', this.schedule(f));
         }, 180000);
@@ -44,7 +43,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         const promises = [];
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
-            //promises.push(this.synchronizeAccount(accounts.content[i].record, false));
+            promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
         Ember.RSVP.all(promises).then(() => this.set('isSyncEngineRunning', false));
@@ -60,40 +59,36 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      * @return {Promise}
      */
     synchronizeAccount(account, isInitial) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (!account) reject(new Error('Missing account parameter'));
 
             this.log(`Synchronizing account`);
 
-            const start = inDays(-2);
-            const end = inDays(2);
-            const strategy = 'strategy:' + account.get('strategy');
+            const start = inDays(-365);
+            const end = inDays(365);
+            const strategy = `strategy:${account.get('strategy')}`;
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
-            let events = [];
 
-            return this.get(strategy).getCalendarView(start, end, account, syncOptions).then((result) => {
-                if (result.deltaToken) {
-                    this.log(`New Delta Token for ${account.get('name')}`);
-                    let startDate = start.toString();
-                    let endDate = end.toString();
-                    account.set('sync', { startDate, endDate, deltaToken: result.deltaToken });
-                    account.save();
-                }
+            return this.get(strategy).getCalendarView(start, end, account, syncOptions)
+                .then((result) => {
+                    if (result.deltaToken) {
+                        const startDate = start.toString();
+                        const endDate = end.toString();
 
-                return this._replaceEventsInDB(result.events, account).then(() => {
-                    this.trigger('update')
-                    return resolve();
+                        account.set('sync', { startDate, endDate, deltaToken: result.deltaToken });
+                        account.save();
+                    }
+
+                    return this._replaceEventsInDB(result.events, account).then(() => {
+                        this.trigger('update');
+                        return resolve();
+                    });
+                })
+                .catch(() => {
+                    const error = `Account ${account.get('name')} with user ${account.get('username')}`
+                                + `is corrupted, please delete and add again.`;
+                    this.notifications.error(error);
                 });
-
-                // Todo: Handle this logic
-                // if (isInitial) {
-                //     return this._replaceEventsInDB(result.events, account).then(() => this.trigger('update'));
-                // } else {
-                //     return this._updateEventsInDB(result.events, account).then(() => this.trigger('update'));
-                // }
-            }).catch((error) => {
-                this.notifications.error(`Account ${account.get('name')} with user ${account.get('username')} is corrupted, please delete and add again.`);
-            });
         });
     },
 
@@ -109,116 +104,46 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
         this.log(`Syncing ${account.get('name')} from ${start.calendar()} to ${end.calendar()}`);
 
-        return this.get(strategy).getCalendarView(start, end, account).then(events => {
-            return this._updateEventsInDB(start, end, events, account);
-        });
-    },
-
-    _removeEventsInDB(start, end, account) {
-        return new Ember.RSVP.Promise(async (resolve) => {
-            const store = this.get('store');
-            const accountEvents = await account.get('events');
-            const length = accountEvents.length
-            let deleteCount = 0;
-            let processedCount = 0;
-
-            this.log(`Checking ${length} events for deletion, using ${start.calendar()} and ${end.calendar()} as bounds`);
-
-            for (let i = 0; processedCount < length; i = i + 1) {
-                const item = accountEvents.objectAt(i);
-                const eventStart = moment(item.get('start'));
-                const eventEnd = moment(item.get('end'));
-
-                if (eventStart.isAfter(start) && eventStart.isBefore(end) ||
-                    eventEnd.isAfter(start) && eventEnd.isBefore(end)) {
-                    deleteCount = deleteCount + 1;
-                    i = i - 1;
-                    accountEvents.removeObject(item);
-                    item.deleteRecord();
-                    item.save();
-                }
-
-                processedCount = processedCount + 1;
-            }
-
-            this.log(`Deleted ${deleteCount} events`);
-
-            await account.save();
-            resolve();
-        });
-    },
-
-    _updateEventsInDB(start, end, events, account) {
-        return new Ember.RSVP.Promise(async (resolve, reject) => {
-            const store = this.get('store');
-            const accountEvents = await account.get('events');
-
-            // Ensure that we "clean" the target area first
-            await this._removeEventsInDB(start, end, account);
-
-            // Then, add back accounts
-            for (let i = 0; i < events.length; i++) {
-                const newEvent = store.createRecord('event', {
-                    providerId: events[i].providerId,
-                    start: events[i].start,
-                    end: events[i].end,
-                    title: events[i].title,
-                    editable: events[i].editable
-                });
-
-                account.get('events').pushObject(newEvent);
-                await newEvent.save();
-            }
-
-            await account.save();
-            resolve();
-        });
+        return this.get(strategy).getCalendarView(start, end, account)
+            .then((events) => this._updateEventsInDB(start, end, events, account));
     },
 
     _replaceEventsInDB(events, account) {
-        return new Ember.RSVP.Promise(async (resolve, reject) => {
+        return new Promise(resolve => {
             const store = this.get('store');
-            let newEvents = [];
+            const newEvents = [];
 
             this.log('Replacing events in database');
 
-            store.query('event', ['account_id', '=', account.get('id')])
-                .then((result) => {
-                    console.log(result);
+            store.query('event', ['where', 'account_id', 'like', account.get('id')])
+                .then((result) =>
+                    processArrayAsync(result.toArray(), (event) => {
+                        if (event) {
+                            event.destroyRecord();
+                        }
+                    }, 25, this)
+                )
+                .then(async () => {
+                    // Replace them
+                    for (let i = 0; i < events.length; i++) {
+                        const newEvent = store.createRecord('event', {
+                            providerId: events[i].providerId,
+                            start: events[i].start,
+                            end: events[i].end,
+                            title: events[i].title,
+                            editable: events[i].editable,
+                            account
+                        });
+
+                        newEvents.push(newEvent);
+                        await newEvent.save();
+                    }
+
+                    account.set('events', newEvents);
+                    await account.save();
+                    this.log('Events replaced');
+                    resolve();
                 });
-
-            // Delete all old events
-            // account.get('events').then(accEvents => {
-            //     // Delete all of them
-            //     processArrayAsync(accEvents.toArray(), (event) => {
-            //         if (event) {
-            //             event.deleteRecord();
-            //             event.save();
-            //         } else {
-            //             console.count('event undefined');
-            //         }
-            //     }, 25, this).then(() => this.log('Deleted old events'));
-            // });
-
-            // Replace them
-            for (let i = 0; i < events.length; i++) {
-                const newEvent = store.createRecord('event', {
-                    providerId: events[i].providerId,
-                    start: events[i].start,
-                    end: events[i].end,
-                    title: events[i].title,
-                    editable: events[i].editable,
-                    account: account
-                });
-
-                newEvents.push(newEvent);
-                await newEvent.save();
-            }
-
-            account.set('events', newEvents);
-            await account.save();
-            this.log('Events replaced');
-            resolve();
         });
     }
 });

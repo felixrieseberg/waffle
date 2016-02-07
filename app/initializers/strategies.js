@@ -9,6 +9,6 @@ export function initialize(application) {
 }
 
 export default {
-  name: 'strategies',
-  initialize
+    name: 'strategies',
+    initialize
 };

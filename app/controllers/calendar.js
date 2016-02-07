@@ -22,7 +22,7 @@ export default Ember.Controller.extend({
 
     actions: {
         toggleSettings() {
-            this.toggleProperty('settingsVisible')
+            this.toggleProperty('settingsVisible');
         },
 
         sync() {

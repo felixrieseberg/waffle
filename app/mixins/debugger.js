@@ -6,21 +6,21 @@ const Mixin = Ember.Mixin.create({
         if (!process.env.debug) return;
 
         this._ensureDebugger();
-        return this.get('debugger').log(content);
+        this.get('debugger').log(content);
     },
 
     time(name) {
         if (!process.env.debug) return;
 
         this._ensureDebugger();
-        return this.get('debugger').time(name);
+        this.get('debugger').time(name);
     },
 
     timeEnd(name) {
         if (!process.env.debug) return;
 
         this._ensureDebugger();
-        return this.get('debugger').timeEnd(name);
+        this.get('debugger').timeEnd(name);
     },
 
     _ensureDebugger() {

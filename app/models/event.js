@@ -2,32 +2,18 @@ import DS from 'ember-data';
 
 export default DS.Model.extend({
     providerId: DS.attr('string'),
-    //Attendees: Array[0]
     body: DS.attr('string'),
     bodyPreview: DS.attr('string'),
-    isEditable: DS.attr('boolean'),
-    //Categories: Array[0]
-    //ChangeKey: "f46rRLd++ECpaAOXpXOchQACqzBkoQ=="
-    //CreatedDateTime: "2016-01-19T23:55:40.5749569Z"
     end: DS.attr('string'),
-    //Importance: "Normal"
+    isEditable: DS.attr('boolean'),
     isAllDay: DS.attr('boolean', { defaultValue: false }),
-    //IsCancelled: false
-    //IsOrganizer: true
-    //IsReminderOn: false
-    //LastModifiedDateTime: "2016-01-19T23:55:42.1843986Z"
-    //Location: Object
-    //Organizer: Object
-    //OriginalEndTimeZone: "Pacific Standard Time"
-    //OriginalStartTimeZone: "Pacific Standard Time"
-    //Recurrence: null
-    //ReminderMinutesBeforeStart: 0
-    //ResponseRequested: true
-    //ResponseStatus: Object
-    //Sensitivity: "Normal"
+    isCancelled: DS.attr('boolean', { defaultValue: false }),
+    isOrganizer: DS.attr('boolean'),
+    isReminderOn: DS.attr('boolean'),
+    location: DS.attr('string'),
     showAs: DS.attr('string'),
     start: DS.attr('string'),
     title: DS.attr('string'),
-    account: DS.belongsTo('account', {async: true})
-    //Type: "SingleInstance"
+    type: DS.attr('string'),
+    account: DS.belongsTo('account', { async: true })
 });

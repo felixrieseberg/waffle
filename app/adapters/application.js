@@ -16,7 +16,9 @@ export default DS.RESTAdapter.extend({
     },
 
     _modelToItem(model, name) {
-        return Ember.$.extend(true, { type: name }, model.attributes);
+        return Ember.$.extend(true, {
+            type: name
+        }, model.attributes);
     },
 
     _pluralizeModelName(type) {
@@ -40,7 +42,7 @@ export default DS.RESTAdapter.extend({
      */
     _bookshelfToEmberResult(result, type, resolve) {
         const modelName = this._pluralizeModelName(type);
-        let results = {};
+        const results = {};
         results[modelName] = [];
 
         result.models.forEach((model) => {
@@ -58,22 +60,24 @@ export default DS.RESTAdapter.extend({
     },
 
     findAll(store, type) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
-            const model = this._modelFromType(type, reject);
+        return new Promise((resolve, reject) => {
+            const Model = this._modelFromType(type, reject);
 
-            model
+            Model
                 .fetchAll()
                 .then(result => this._bookshelfToEmberResult(result, type, resolve));
         });
     },
 
     createRecord(store, type, snapshot) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
-            const model = this._modelFromType(type, reject);
-            const data = this.serialize(snapshot, { includeId: true });
-            let result = {};
+        return new Promise((resolve, reject) => {
+            const Model = this._modelFromType(type, reject);
+            const result = {};
+            const data = this.serialize(snapshot, {
+                includeId: true
+            });
 
-            new model(this._serializeIfNecessary(data))
+            new Model(this._serializeIfNecessary(data))
                 .save()
                 .then((savedModel) => {
                     result[type.modelName] = this._modelToItem(savedModel);
@@ -83,25 +87,28 @@ export default DS.RESTAdapter.extend({
     },
 
     deleteRecord(store, type, snapshot) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
-            const model = this._modelFromType(type, reject);
+        return new Promise((resolve, reject) => {
+            const Model = this._modelFromType(type, reject);
 
-            new model({ id: snapshot.id}).fetch().then((model) => {
+            new Model({
+                id: snapshot.id
+            }).fetch().then((model) => {
                 model.destroy().then(() => resolve());
             });
         });
     },
 
     updateRecord(store, type, snapshot) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
-            const model = this._modelFromType(type, reject);
-            const data = this.serialize(snapshot, { includeId: true });
+        return new Promise((resolve, reject) => {
+            const Model = this._modelFromType(type, reject);
+            const result = {};
+            const data = this.serialize(snapshot, {
+                includeId: true
+            });
 
-            new model({ id: snapshot.id })
+            new Model({ id: snapshot.id })
                 .fetch()
                 .then(fetchedModel => {
-                    let result = {};
-
                     fetchedModel.set(this._serializeIfNecessary(data))
                         .save()
                         .then(savedModel => {
@@ -113,11 +120,11 @@ export default DS.RESTAdapter.extend({
     },
 
     query(store, type, query) {
-        return new Ember.RSVP.Promise((resolve, reject) => {
-            const model = this._modelFromType(type);
+        return new Promise(resolve => {
+            const Model = this._modelFromType(type);
 
-            new model()
-                .where(...query)
+            new Model()
+                .query(...query)
                 .fetchAll()
                 .then(result => this._bookshelfToEmberResult(result, type, resolve));
         });

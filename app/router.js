@@ -2,11 +2,11 @@ import Ember from 'ember';
 import config from './config/environment';
 
 const Router = Ember.Router.extend({
-  location: config.locationType
+    location: config.locationType
 });
 
-Router.map(function() {
-  this.route('calendar');
+Router.map(() => {
+    this.route('calendar');
 });
 
 export default Router;

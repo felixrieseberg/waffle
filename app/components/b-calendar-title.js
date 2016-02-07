@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import moment from 'moment';
 
 export default Ember.Component.extend({
     classNames: ['calendar-title'],
@@ -11,10 +12,10 @@ export default Ember.Component.extend({
             if (targetDate) {
                 if (this.get('view') === 'monthly') {
                     return moment(targetDate, 'YYYY-MM-DD').format('MMMM YYYY');
-                } else {
-                    // TODO: Title for weeks
-                    return moment(targetDate, 'YYYY-MM-DD').format('MMMM YYYY');
                 }
+
+                // TODO: Title for weeks
+                return moment(targetDate, 'YYYY-MM-DD').format('MMMM YYYY');
             }
 
             return '';

@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import moment from 'moment';
 import { Mixin, Debug } from '../mixins/debugger';
 
 export default Ember.Component.extend(Mixin, {
@@ -21,15 +22,15 @@ export default Ember.Component.extend(Mixin, {
 
     _getDays(startDate) {
         const targetDate = moment(this.get('targetDate'), 'YYYY-MM-DD');
-        let days = [];
+        const days = [];
 
         for (let i = 0; i < 7; i++) {
-            let dayDate = i > 0 ? startDate.clone().add(i, 'days') : startDate.clone();
-            let isInTargetMonth = (targetDate.month() === dayDate.month());
+            const date = i > 0 ? startDate.clone().add(i, 'days') : startDate.clone();
+            const isInTargetMonth = (targetDate.month() === date.month());
 
             days.push({
-                date: moment(dayDate),
-                isInTargetMonth: isInTargetMonth
+                date,
+                isInTargetMonth
             });
         }
 
@@ -47,13 +48,15 @@ export default Ember.Component.extend(Mixin, {
         }
 
         if (events && events.length > 0) {
-            requestIdleCallback(load, { timeout: 200 });
+            requestIdleCallback(load, {
+                timeout: 200
+            });
         }
     },
 
     _processEvents(events) {
         const days = this.get('days');
-        let eventsInView = [[], [], [], [], [], [], []];
+        const eventsInView = [[], [], [], [], [], [], []];
 
         if (!days || !days.length) return eventsInView;
 
@@ -73,5 +76,5 @@ export default Ember.Component.extend(Mixin, {
         });
 
         return eventsInView;
-    },
+    }
 });
