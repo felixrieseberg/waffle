@@ -4,7 +4,6 @@ export default class Debug {
         this.color = this._createColor();
         this.padLength = 18;
         this.timerStore = [];
-        process.env.debug = true;
     }
 
     log(content) {

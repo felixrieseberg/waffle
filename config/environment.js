@@ -2,7 +2,7 @@
 
 module.exports = function (environment) {
     var ENV = {
-        modulePrefix: 'butter',
+        modulePrefix: 'waffle',
         environment: environment,
         baseURL: '/',
         locationType: 'hash',

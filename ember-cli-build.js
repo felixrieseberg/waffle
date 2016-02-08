@@ -8,7 +8,17 @@ module.exports = function (defaults) {
             useScss: true
         },
         babel: {
-            includePolyfill: true
+            includePolyfill: true,
+            blacklist: [
+                "es6.arrowFunctions",
+                "es6.blockScoping",
+                "es6.classes",
+                "es6.forOf",
+                "es6.templateLiterals",
+                "es6.constants",
+                "es6.properties.computed",
+                "es6.properties.shorthand"
+            ]
         },
         hinting: false
     });
