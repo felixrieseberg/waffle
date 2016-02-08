@@ -64,8 +64,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
             this.log(`Synchronizing account`);
 
-            const start = inDays(-365);
-            const end = inDays(365);
+            const start = inDays(-30);
+            const end = inDays(30);
             const strategy = `strategy:${account.get('strategy')}`;
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
 
@@ -79,7 +79,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                         account.save();
                     }
 
-                    return this._replaceEventsInDB(result.events, account).then(() => {
+                    return this._replaceEventsInDB(start, end, result.events, account).then(() => {
                         this.trigger('update');
                         return resolve();
                     });
@@ -93,33 +93,33 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
     },
 
     /**
-     * Get a calendar view
-     * @param  {moment} start   Start date
-     * @param  {moment} end     End date
-     * @param  {model/account} account - Account to use
+     * Replaces events in the database for a given account and a given timeframe
+     * with a new set of events
+     * @param  {moment} start    - Start of the search window
+     * @param  {moment} end      - End of the search window
+     * @param  {object[]} events - Replacement events
+     * @param  {object} account  - Account to operate on
      * @return {Promise}
      */
-    _getCalendarView(start, end, account) {
-        const strategy = 'strategy:' + account.get('strategy');
-
-        this.log(`Syncing ${account.get('name')} from ${start.calendar()} to ${end.calendar()}`);
-
-        return this.get(strategy).getCalendarView(start, end, account)
-            .then((events) => this._updateEventsInDB(start, end, events, account));
-    },
-
-    _replaceEventsInDB(events, account) {
+    _replaceEventsInDB(start, end, events, account) {
         return new Promise(resolve => {
             const store = this.get('store');
             const newEvents = [];
+            const query = {
+                isCalendarQuery: true,
+                accountId: account.get('id'),
+                start: start.toISOString(),
+                end: end.toISOString()
+            };
 
             this.log('Replacing events in database');
 
-            store.query('event', ['where', 'account_id', 'like', account.get('id')])
+            store.query('event', query)
                 .then((result) =>
                     processArrayAsync(result.toArray(), (event) => {
                         if (event) {
-                            event.destroyRecord();
+                            event.deleteRecord();
+                            event.save();
                         }
                     }, 25, this)
                 )

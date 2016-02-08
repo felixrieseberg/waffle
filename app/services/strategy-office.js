@@ -217,7 +217,10 @@ export default Ember.Service.extend(Mixin, {
         if (!response || !response.body['@odata.deltaLink']) return null;
 
         const tokenPosition = response.body['@odata.deltaLink'].lastIndexOf('deltatoken=');
-        return response.body['@odata.deltaLink'].slice(tokenPosition + 11);
+        const token = response.body['@odata.deltaLink'].slice(tokenPosition + 11);
+
+        // If the token length is fishy, let's not return anything
+        return (token.length === 32) ? token : null;
     },
 
     _makeApiCall(url, token, headerExtras) {
