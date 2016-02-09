@@ -33,10 +33,12 @@ export default Ember.Component.extend(Mixin, {
     },
 
     refresh() {
-        this.log('Refreshing');
-        this.set('loadedEvents', []);
-        this.set('views', []);
-        this._loadEvents();
+        Ember.run.later(() => {
+            this.log('Refreshing');
+            this.set('loadedEvents', []);
+            this.set('views', []);
+            this._loadEvents();
+        });
     },
 
     didReceiveAttrs() {

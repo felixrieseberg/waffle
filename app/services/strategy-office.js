@@ -183,14 +183,21 @@ export default Ember.Service.extend(Mixin, {
         const start = moment(new Date(inputEvent.Start.DateTime + 'Z'));
         const end = moment(new Date(inputEvent.End.DateTime + 'Z'));
         const isAllDay = (inputEvent.IsAllDay || !start.isSame(end, 'day'));
+        const location = (inputEvent.Location) ? inputEvent.Location.DisplayName : '';
 
         return {
             start: start.format(),
             end: end.format(),
             title: inputEvent.Subject,
             providerId: inputEvent.Id,
-            showAs: inputEvent.showAs,
+            body: inputEvent.Body.Content,
+            bodyType: inputEvent.Body.ContentType,
+            showAs: inputEvent.ShowAs,
             isEditable: false,
+            isOrganizer: inputEvent.IsOrganizer,
+            isReminderOn: inputEvent.IsReminderOn,
+            isCancelled: inputEvent.IsCancelled,
+            location,
             isAllDay
         };
     },

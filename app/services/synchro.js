@@ -6,6 +6,13 @@ import { processArrayAsync } from '../utils/performance';
 export default Ember.Service.extend(Ember.Evented, Mixin, {
     store: Ember.inject.service(),
     isSyncEngineRunning: false,
+    syncWindows: [
+        { start: -30, end: 30, synced: null, priority: 0 },
+        { start: -365, end: -30, synced: null, priority: 1 },
+        { start: 30, end: -365, synced: null, priority: 1 },
+        { start: -730, end: -365, synced: null, priority: 2 },
+        { start: 365, end: 730, synced: null, priority: 1 }
+    ],
 
     init() {
         this._super(...arguments);
@@ -29,6 +36,9 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         }, 180000);
     },
 
+    /**
+     * Synchronize all accounts
+     */
     async synchronize() {
         if (this.get('isSyncEngineRunning') === true) {
             this.log('Sync Engine: Wanted to sync, but synchronization is already running');
@@ -38,15 +48,28 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         this.log('Started synchronization for all accounts');
         this.set('isSyncEngineRunning', true);
 
+        const window = this.chooseWindow();
+        const start = inDays(window.start);
+        const end = inDays(window.end);
         const store = this.get('store');
         const accounts = await store.findAll('account');
         const promises = [];
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
-            promises.push(this.synchronizeAccount(accounts.content[i].record, false));
+            promises.push(this.synchronizeAccount(accounts.content[i].record, false, start, end));
         }
 
         Ember.RSVP.all(promises).then(() => this.set('isSyncEngineRunning', false));
+    },
+
+    /**
+     * Chooses a window to sync
+     * @return {object} Window to sync
+     */
+    chooseWindow() {
+        const windows = this.get('syncWindows');
+        // TODO: Define logic
+        return windows[0];
     },
 
     /**
@@ -55,17 +78,17 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      * saving a "sync" token to fetch only deltas going
      * forward
      * @param  {model/account} account - Account to use
-     * @param  {boolean} isInitial - Set to true if this is an initial sync
+     * @param  {boolean} isInitial     - Set to true if this is an initial sync
+     * @param  {moment} start          - Start of the search window
+     * @param  {moment} end            - End of the search window
      * @return {Promise}
      */
-    synchronizeAccount(account, isInitial) {
+    synchronizeAccount(account, isInitial, start, end) {
         return new Promise((resolve, reject) => {
             if (!account) reject(new Error('Missing account parameter'));
 
             this.log(`Synchronizing account`);
 
-            const start = inDays(-30);
-            const end = inDays(30);
             const strategy = `strategy:${account.get('strategy')}`;
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
 
@@ -84,7 +107,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                         return resolve();
                     });
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.log(err);
                     const error = `Account ${account.get('name')} with user ${account.get('username')}`
                                 + `is corrupted, please delete and add again.`;
                     this.notifications.error(error);
@@ -121,19 +145,13 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                             event.deleteRecord();
                             event.save();
                         }
-                    }, 25, this)
-                )
+                    }, 25, this))
                 .then(async () => {
                     // Replace them
                     for (let i = 0; i < events.length; i++) {
-                        const newEvent = store.createRecord('event', {
-                            providerId: events[i].providerId,
-                            start: events[i].start,
-                            end: events[i].end,
-                            title: events[i].title,
-                            editable: events[i].editable,
-                            account
-                        });
+                        let eventData = events[i];
+                        eventData.account = account;
+                        const newEvent = store.createRecord('event', eventData);
 
                         newEvents.push(newEvent);
                         await newEvent.save();

@@ -21,7 +21,7 @@ exports.up = function(knex, Promise) {
             table.dateTime('end');
             table.string('providerId');
             table.text('body');
-            table.text('bodyPreview');
+            table.text('bodyType');
             table.text('title');
             table.string('showAs');
             table.boolean('isEditable');
