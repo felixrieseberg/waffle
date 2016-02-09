@@ -1,0 +1,13 @@
+<div class="settings md-modal md-event md-effect {{if isEnabled "md-show"}}" id="modal-2" style={{style}}>
+    <div class="md-content">
+        <header>
+            <span>{{event.title}}</span>
+        </header>
+        <div class="md-body">
+            <div>
+                <span>{{day}}, {{moment-hour event.start}} - {{moment-hour event.end}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+<div {{action "toggleVisibility"}} class="md-overlay md-event"></div>

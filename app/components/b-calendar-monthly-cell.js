@@ -28,5 +28,11 @@ export default Ember.Component.extend({
         if (events && events.length > 0) {
             this.set('dayEvents', events[index]);
         }
+    },
+
+    actions: {
+        onEventClicked() {
+            this.get('onEventClicked')(...arguments);
+        }
     }
 });

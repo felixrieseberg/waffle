@@ -75,13 +75,14 @@ ul.daynames {
 
         li {
             font-weight: 500;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             margin: 0;
             padding: 0;
             -webkit-animation: fadein 1s;
             animation: fadein 1s;
             list-style-type: none;
             width: 100%;
+            cursor: pointer;
 
             div.event-label {
                 white-space: nowrap;
@@ -96,6 +97,11 @@ ul.daynames {
                 color: $butter-color;
             }
         }
+
+        li:hover {
+            background-color: $butter-color-light;
+            border-radius: 1px;
+        }
     }
 
     div.monthly-day:first-child {
@@ -109,6 +115,28 @@ ul.daynames {
     div.is-today {
         border: 1px solid $butter-color;
         background-color: $butter-color-light;
+    }
+
+    .md-modal.md-event {
+        transform-origin: top left;
+        width: 320px;
+        top: 0;
+        left: 0;
+        font-size: 1.4rem;
+
+        header {
+            overflow: auto;
+            height: auto;
+
+            span {
+                font-weight: 300;
+                font-size: 1.5rem;
+            }
+        }
+    }
+
+    .md-overlay.md-event {
+        background: none;
     }
 }
 

@@ -1,5 +1,5 @@
 export function processArrayAsync(array, fn, chunk, context) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         if (!array || !array.length || array.length === 0) return resolve();
 
         const _context = context || window;

@@ -2,20 +2,7 @@
 {{#if dayEvents}}
     <ul>
         {{#each dayEvents as |event|}}
-            {{#if event.isAllDay}}
-                <li>
-                    <div class="event-label is-all-day">
-                        <span>{{event.title}}</span>
-                    </div>
-                </li>
-            {{else}}
-                <li>
-                    <span class="event-time">{{moment-hour event.start}}</span>
-                    <div class="event-label">
-                        <span>{{event.title}}</span>
-                    </div>
-                </li>
-            {{/if}}
+            {{b-calendar-monthly-cell-entry event=event onEventClicked=(action "onEventClicked")}}
         {{/each}}
     </ul>
 {{/if}}

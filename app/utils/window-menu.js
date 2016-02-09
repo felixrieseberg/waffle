@@ -1,8 +1,8 @@
 export default function setup() {
     const electron = requireNode('electron');
+    const app = requireNode('electron').app;
     const remote = electron.remote;
     const Menu = remote.Menu;
-    const MenuItem = remote.MenuItem;
     const template = [
         {
             label: 'Edit',
@@ -48,35 +48,38 @@ export default function setup() {
                 {
                     label: 'Reload',
                     accelerator: 'CmdOrCtrl+R',
-                    click: function(item, focusedWindow) {
-                        if (focusedWindow)
+                    click(item, focusedWindow) {
+                        if (focusedWindow) {
                             focusedWindow.reload();
+                        }
                     }
                 },
                 {
                     label: 'Toggle Full Screen',
-                    accelerator: (function() {
-                        if (process.platform == 'darwin')
+                    accelerator: (function accelerator() {
+                        if (process.platform === 'darwin') {
                             return 'Ctrl+Command+F';
-                        else
-                            return 'F11';
-                    })(),
-                    click: function(item, focusedWindow) {
-                        if (focusedWindow)
+                        }
+                        return 'F11';
+                    }()),
+                    click(item, focusedWindow) {
+                        if (focusedWindow) {
                             focusedWindow.setFullScreen(!focusedWindow.isFullScreen());
+                        }
                     }
                 },
                 {
                     label: 'Toggle Developer Tools',
-                    accelerator: (function() {
-                        if (process.platform == 'darwin')
+                    accelerator: (function accelerator() {
+                        if (process.platform === 'darwin') {
                             return 'Alt+Command+I';
-                        else
-                            return 'Ctrl+Shift+I';
-                    })(),
-                    click: function(item, focusedWindow) {
-                        if (focusedWindow)
+                        }
+                        return 'Ctrl+Shift+I';
+                    }()),
+                    click(item, focusedWindow) {
+                        if (focusedWindow) {
                             focusedWindow.toggleDevTools();
+                        }
                     }
                 }
             ]
@@ -103,7 +106,7 @@ export default function setup() {
             submenu: [
                 {
                     label: 'Learn More',
-                    click: function() {
+                    click() {
                         require('electron').shell.openExternal('http://electron.atom.io');
                     }
                 }
@@ -150,7 +153,7 @@ export default function setup() {
                 {
                     label: 'Quit',
                     accelerator: 'Command+Q',
-                    click: function() {
+                    click() {
                         app.quit();
                     }
                 }
@@ -167,6 +170,7 @@ export default function setup() {
             }
         );
     }
+
     const builtMenu = Menu.buildFromTemplate(template);
 
     Menu.setApplicationMenu(builtMenu);

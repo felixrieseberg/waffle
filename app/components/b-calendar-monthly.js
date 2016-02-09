@@ -10,6 +10,8 @@ export default Ember.Component.extend(Mixin, {
     events: [],
     rows: [],
     views: [],
+    eventModalTop: 0,
+    eventModalLeft: 0,
 
     firstDay: Ember.computed('targetDate', {
         get() {
@@ -221,5 +223,14 @@ export default Ember.Component.extend(Mixin, {
         requestIdleCallback(load, {
             timeout: 60000
         });
+    },
+
+    actions: {
+        onEventClicked(e, selectedEvent) {
+            this.set('selectedEvent', selectedEvent);
+            this.set('eventModalTop', e.clientY);
+            this.set('eventModalLeft', e.clientX);
+            this.toggleProperty('eventModalVisible');
+        }
     }
 });

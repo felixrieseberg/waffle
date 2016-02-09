@@ -127,6 +127,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      */
     _replaceEventsInDB(start, end, events, account) {
         return new Promise(resolve => {
+            if (!events || events.length === 0) resolve();
+
             const store = this.get('store');
             const newEvents = [];
             const query = {
@@ -142,14 +144,13 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                 .then((result) =>
                     processArrayAsync(result.toArray(), (event) => {
                         if (event) {
-                            event.deleteRecord();
-                            event.save();
+                            event.destroyRecord().then(() => store.unloadRecord(event));
                         }
                     }, 25, this))
                 .then(async () => {
                     // Replace them
                     for (let i = 0; i < events.length; i++) {
-                        let eventData = events[i];
+                        const eventData = events[i];
                         eventData.account = account;
                         const newEvent = store.createRecord('event', eventData);
 

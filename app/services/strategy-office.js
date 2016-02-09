@@ -72,7 +72,7 @@ export default Ember.Service.extend(Mixin, {
         return jwt.preferred_username;
     },
 
-    authenticate(silent) {
+    authenticate(existingUser) {
         return new Promise((resolve, reject) => {
             const BrowserWindow = require('electron').remote.BrowserWindow;
             const resp = (this.oa2.clientSecret) ? '&response_type=code' : '&response_type=id_token+token';
@@ -80,7 +80,7 @@ export default Ember.Service.extend(Mixin, {
             const scope = '&scope=' + this.oa2.scopes.join(' ');
             const client = '?client_id=' + this.oa2.clientID;
             const nonce = (this.oa2.clientSecret) ? '' : '&response_mode=fragment&state=12345&nonce=678910';
-            const prompt = (silent) ? '&prompt=none' : '';
+            const prompt = (existingUser) ? `&prompt=none&login_hint=${existingUser}&domain_hint=organizations` : '';
             const authUrl = this.oa2.base + this.oa2.authUrl + client + resp + scope + red + prompt + nonce;
 
             let authWindow = new BrowserWindow({
@@ -92,7 +92,7 @@ export default Ember.Service.extend(Mixin, {
 
             authWindow.loadURL(authUrl);
 
-            if (!silent) {
+            if (!existingUser) {
                 authWindow.show();
             }
 
@@ -289,29 +289,34 @@ export default Ember.Service.extend(Mixin, {
         return new Promise((resolve, reject) => {
             const oauth = account.get('oauth');
 
-            return this._requestToken(oauth.code)
-                .then((response) => {
-                    // TODO: Error handling
-                    const newOauth = response;
-                    newOauth.code = account.get('oauth').code;
+            return this._reauthenticate(account);
 
-                    account.set('oauth', oauth).save();
-                    resolve(response.access_token);
-                })
-                .catch((error) => {
-                    if (error.response && error.response.body) {
-                        // Check if the code is expired, too
-                        const errBody = error.response.body;
-                        if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
-                            // Let's authenticate the current account - again
-                            this.log('Office 365: Tried fetching new token, but code seems to be expired.');
-                            this._reauthenticate(account);
-                            reject(new Error('code expired'));
-                        }
-                    } else {
-                        reject(error);
-                    }
-                });
+            // Authorization flow reauth
+            // -----------------------------------
+            // return this._requestToken(oauth.code)
+            //     .then((response) => {
+            //         // TODO: Error handling
+            //         console.log(response);
+            //         const newOauth = response;
+            //         newOauth.code = account.get('oauth').code;
+            //
+            //         account.set('oauth', oauth).save();
+            //         resolve(response.access_token);
+            //     })
+            //     .catch((error) => {
+            //         if (error.response && error.response.body) {
+            //             // Check if the code is expired, too
+            //             const errBody = error.response.body;
+            //             if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
+            //                 // Let's authenticate the current account - again
+            //                 this.log('Office 365: Tried fetching new token, but code seems to be expired.');
+            //                 reject(new Error('code expired'));
+            //             }
+            //         } else {
+            //             console.log(error);
+            //             reject(error);
+            //         }
+            //     });
         });
     },
 
@@ -347,7 +352,7 @@ export default Ember.Service.extend(Mixin, {
 
     _reauthenticate(account) {
         return new Promise((resolve, reject) => {
-            this.authenticate(true).then((response) => {
+            this.authenticate(account.get('username')).then((response) => {
                 if (!response) return;
 
                 account.setProperties({
@@ -359,7 +364,10 @@ export default Ember.Service.extend(Mixin, {
                 account.save();
 
                 resolve(account);
-            }).catch((err) => reject(err));
+            }).catch((err) => {
+                console.log(err);
+                reject(err)
+            });
         });
     },
 

@@ -14,7 +14,15 @@
             startDate=row.startDate
             events=events
             targetDate=targetDate
+            onEventClicked=(action "onEventClicked")
             index=index
         }}
     {{/each}}
 </section>
+
+{{b-event-modal
+    isEnabled=eventModalVisible
+    event=selectedEvent
+    top=eventModalTop
+    left=eventModalLeft
+}}

@@ -76,5 +76,11 @@ export default Ember.Component.extend(Mixin, {
         });
 
         return eventsInView;
+    },
+
+    actions: {
+        onEventClicked() {
+            this.get('onEventClicked')(...arguments);
+        }
     }
 });
