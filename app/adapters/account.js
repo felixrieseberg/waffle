@@ -13,6 +13,10 @@ export default ApplicationAdapter.extend({
             model.attributes.sync = JSON.parse(model.attributes.sync);
         }
 
+        if (model.attributes.windows) {
+            model.attributes.windows = JSON.parse(model.attributes.windows);
+        }
+
         return this._super(model, name);
     },
 
@@ -25,6 +29,7 @@ export default ApplicationAdapter.extend({
 
         data.oauth = (data.oauth) ? JSON.stringify(data.oauth) : data.oauth;
         data.sync = (data.sync) ? JSON.stringify(data.sync) : data.sync;
+        data.windows = (data.windows) ? JSON.stringify(data.windows) : data.windows;
 
         return this._super(data);
     }

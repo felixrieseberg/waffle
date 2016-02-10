@@ -1,16 +1,17 @@
 import Ember from 'ember';
 import { inDays } from '../utils/time-utils';
 import { Mixin, Debug } from '../mixins/debugger';
+import moment from 'moment';
 
 export default Ember.Service.extend(Ember.Evented, Mixin, {
     store: Ember.inject.service(),
     isSyncEngineRunning: false,
     syncWindows: [
-        { start: -30, end: 30, synced: null, priority: 0 },
-        { start: -365, end: -30, synced: null, priority: 1 },
-        { start: 30, end: -365, synced: null, priority: 1 },
-        { start: -730, end: -365, synced: null, priority: 2 },
-        { start: 365, end: 730, synced: null, priority: 1 }
+        { start: -30, end: 30, synced: null, every: 5 },
+        { start: -365, end: -30, synced: null, every: 15 },
+        { start: 30, end: -365, synced: null, every: 15 },
+        { start: -730, end: -365, synced: null, every: 60 },
+        { start: 365, end: 730, synced: null, every: 60 }
     ],
 
     init() {
@@ -47,28 +48,15 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         this.log('Started synchronization for all accounts');
         this.set('isSyncEngineRunning', true);
 
-        const window = this.chooseWindow();
-        const start = inDays(window.start);
-        const end = inDays(window.end);
         const store = this.get('store');
         const accounts = await store.findAll('account');
         const promises = [];
 
         for (let i = 0; i < accounts.content.length; i = i + 1) {
-            promises.push(this.synchronizeAccount(accounts.content[i].record, false, start, end));
+            promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
-        Ember.RSVP.all(promises).finally(() => this.set('isSyncEngineRunning', false));
-    },
-
-    /**
-     * Chooses a window to sync
-     * @return {object} Window to sync
-     */
-    chooseWindow() {
-        const windows = this.get('syncWindows');
-        // TODO: Define logic
-        return windows[0];
+        Ember.RSVP.allSettled(promises).finally(() => this.set('isSyncEngineRunning', false));
     },
 
     /**
@@ -82,7 +70,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      * @param  {moment} end            - End of the search window
      * @return {Promise}
      */
-    synchronizeAccount(account, isInitial, start, end) {
+    synchronizeAccount(account, isInitial) {
         return new Promise((resolve, reject) => {
             if (!account) reject(new Error('Missing account parameter'));
 
@@ -90,6 +78,9 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
             const strategy = `strategy:${account.get('strategy')}`;
             const syncOptions = { trackChanges: true, useDelta: !isInitial };
+            const syncWindow = this._chooseWindow(account);
+            const start = inDays(syncWindow.start);
+            const end = inDays(syncWindow.end);
 
             return this.get(strategy).getCalendarView(start, end, account, syncOptions)
                 .then((result) => {
@@ -103,8 +94,11 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
                     return this._replaceEventsInDB(start, end, result.events, account).then(() => {
                         this.trigger('update');
-                        return resolve();
+                        return resolve(account);
                     });
+                })
+                .then(() => {
+                    this._updateWindow(account, syncWindow);
                 })
                 .catch((err) => {
                     console.log(err);
@@ -113,6 +107,66 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                     this.notifications.error(error);
                 });
         });
+    },
+
+    /**
+     * Chooses a window to sync
+     *
+     * Priority 0: Sync every 5 minutes
+     * Priority 1: Sync every 15 minutes
+     * Priority 2: Sync every hour
+     *
+     * @param  {model/account} account - Account to use
+     * @return {object} Window to sync
+     */
+    _chooseWindow(account) {
+        const windows = this.get('syncWindows');
+        const accountWindows = account.get('windows');
+        let toSync;
+
+        if (accountWindows) {
+            toSync = accountWindows.find(item => {
+                if (item.synced === null) return true;
+                const shouldHaveSynced = moment().subtract({ minutes: item.every });
+                const synced = moment(item.synced);
+                const syncTooOld = synced.isBefore(shouldHaveSynced);
+
+                return syncTooOld;
+            });
+        }
+
+        if (!toSync) {
+            account.set('windows', windows);
+            account.save();
+            return windows[0];
+        }
+
+        return toSync;
+    },
+
+    /**
+     * Saves the last sync time for a given window on an account
+     * @param  {model/account} account  - Account to use
+     * @param  {object} window          - Window that was synced
+     */
+    _updateWindow(account, window) {
+        const accountWindows = account.get('windows');
+        let foundIndex;
+        let updatedWindow;
+
+        updatedWindow = accountWindows.find((item, index) => {
+            if (item.start === window.start && item.end === window.end) {
+                foundIndex = index;
+                return true;
+            }
+        });
+
+        if (updatedWindow) {
+            updatedWindow.synced = moment().toISOString();
+            accountWindows[foundIndex] = updatedWindow;
+            account.set('windows', accountWindows);
+            account.save();
+        }
     },
 
     /**

@@ -6,8 +6,9 @@ export default DS.Model.extend({
     username: DS.attr('string'),
     password: DS.attr('string'),
     strategy: DS.attr('string'),
-    oauth: DS.attr(), // Generic object to hold oauth information
-    sync: DS.attr(),  // Generic object to hold sync information
+    oauth: DS.attr(),       // Generic object (JSON) to hold oauth information
+    sync: DS.attr(),        // Generic object (JSON) to hold sync information
+    windows: DS.attr(),     // Generic object (JSON) to hold sync window information
 
     /**
      * Deletes all events on this account in a

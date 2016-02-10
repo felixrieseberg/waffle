@@ -9,6 +9,7 @@ exports.up = function(knex, Promise) {
             table.string('strategy');
             table.json('oauth');
             table.json('sync');
+            table.json('windows');
             table.json('error');
             table.integer('events')
                 .references('id')

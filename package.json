@@ -12,7 +12,7 @@
     "start": "ember server",
     "test": "eslint app",
     "postinstall": "./node_modules/.bin/electron-rebuild",
-    "reset": "rm ./database/butter_dev.sqlite && cd ./database && knex migrate:latest && cd .. && ember electron"
+    "reset": "rm ./database/waffle_empty.sqlite && cd ./database && knex migrate:latest && cd .. && ember electron"
   },
   "repository": "",
   "engines": {

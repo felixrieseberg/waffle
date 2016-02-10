@@ -6,6 +6,10 @@ export default class Debug {
         this.timerStore = [];
     }
 
+    /**
+     * Logs some content in a pretty fromat
+     * @param  {string} content - Content to log
+     */
     log(content) {
         if (!process.env.debug) return;
 
@@ -17,6 +21,10 @@ export default class Debug {
         console.log(title, colorString, content); // eslint-disable-line no-console
     }
 
+    /**
+     * Ends a console timer with a given name
+     * @param  {string} name - Name of the timer
+     */
     timeEnd(name) {
         const start = Date.now();
         let foundIndex;
@@ -34,6 +42,10 @@ export default class Debug {
         }
     }
 
+    /**
+     * Start a console timer with a given name
+     * @param  {string} name - Name of the timer
+     */
     time(name) {
         this.timerStore.push({ start: Date.now(), name });
     }

@@ -137,7 +137,8 @@ export default Ember.Service.extend(Mixin, {
                         }
 
                         if (item.Type === 'Occurrence') {
-                            return occurences.push(item);
+                            occurences.push(item);
+                            return;
                         }
 
                         if (item.reason && item.reason === 'deleted') {

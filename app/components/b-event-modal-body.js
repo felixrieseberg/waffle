@@ -27,7 +27,6 @@ export default Ember.Component.extend({
 
         const webview = Ember.$('webview#body-webview')[0];
         const modal = Ember.$('#modal-event-body');
-        console.log(webview);
         const listener = webview.addEventListener('did-finish-load', () => {
             Ember.run.later(() => modal.width('321px'));
         });
