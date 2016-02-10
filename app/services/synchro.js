@@ -71,7 +71,9 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             promises.push(this.synchronizeAccount(accounts.content[i].record, false));
         }
 
-        Ember.RSVP.allSettled(promises).finally(() => this.set('isSyncEngineRunning', false));
+        Ember.RSVP.allSettled(promises)
+            .then(() => this.trigger('update'))
+            .finally(() => this.set('isSyncEngineRunning', false));
     },
 
     /**

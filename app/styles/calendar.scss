@@ -90,6 +90,14 @@ ul.daynames {
                 text-overflow: ellipsis;
             }
 
+            div.event-label.is-all-day {
+                background-color: $waffle-color;
+                color: white;
+                padding-left: 4px;
+                border-radius: 2px;
+                margin-bottom: 2px;
+            }
+
             span.event-time {
                 font-weight: 300;
                 float: right;
@@ -139,6 +147,11 @@ ul.daynames {
                 font-weight: 600;
                 font-size: 1.5rem;
             }
+
+            .tiny-button {
+                float: right;
+                margin-bottom: 0;
+            }
         }
 
         section {
@@ -153,6 +166,36 @@ ul.daynames {
 
         section.event-body {
             height: 300px;
+            animation: fadein 1s;
+        }
+
+        section.event-body-preview {
+            display: flex;
+            flex-direction: row;
+        }
+
+        section.event-body-preview .left {
+            white-space: pre-wrap;
+            width: 90%;
+            font-size: .85em;
+            overflow: scroll;
+        }
+
+        section.event-body-preview .right {
+            width: 10%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-left: 1px solid #EFEFEF;
+            margin-left: 3px;
+
+            i {
+                padding-left: 5px;
+            }
+        }
+
+        section.event-body-preview .left::after {
+            content: "…";
         }
 
         section.event-location {

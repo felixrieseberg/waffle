@@ -32,9 +32,20 @@ export default Ember.Component.extend({
         });
     }),
 
+    bodyPreview: Ember.computed('event.bodyPreview', {
+        get() {
+            const bp = this.get('event.bodyPreview');
+            return (bp) ? bp.trim() : null;
+        }
+    }),
+
     actions: {
         toggleVisibility() {
             this.toggleProperty('isEnabled');
+        },
+
+        toggleBody() {
+            this.toggleProperty('isFullBodyVisible');
         },
 
         openLocation() {

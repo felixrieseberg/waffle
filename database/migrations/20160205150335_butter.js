@@ -22,8 +22,9 @@ exports.up = function(knex, Promise) {
             table.dateTime('end');
             table.string('providerId');
             table.text('body');
-            table.text('bodyType');
-            table.text('title');
+            table.text('bodyPreview');
+            table.string('bodyType');
+            table.string('title');
             table.string('showAs');
             table.boolean('isEditable');
             table.boolean('isAllDay');

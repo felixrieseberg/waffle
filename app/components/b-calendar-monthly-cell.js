@@ -25,8 +25,16 @@ export default Ember.Component.extend({
         const events = this.get('events');
         const index = this.get('index');
 
-        if (events && events.length > 0) {
-            this.set('dayEvents', events[index]);
+        if (events && events.length > 0 && events[index]) {
+            const eventsAtIndex = events[index];
+            eventsAtIndex.sort((a, b) => {
+                let aAD = a.get('isAllDay');
+                let bAD = b.get('isAllDay');
+                if (aAD === bAD) return 0;
+                if (aAD) return -1;
+                return 1;
+            });
+            this.set('dayEvents', eventsAtIndex);
         }
     },
 
