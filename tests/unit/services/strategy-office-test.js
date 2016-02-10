@@ -1,6 +1,6 @@
 import { moduleFor, test } from 'ember-qunit';
 
-moduleFor('service:synchronize', 'Unit | Service | synchronize', {
+moduleFor('service:strategy-office', 'Unit | Service | office', {
   // Specify the other units that are required for this test.
   // needs: ['service:foo']
 });

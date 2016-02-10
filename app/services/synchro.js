@@ -14,25 +14,40 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         { start: 365, end: 730, synced: null, every: 60 }
     ],
 
+    /**
+     * Called as soon as the service initializes,
+     * setting up debugging and starting the sync engine
+     */
     init() {
         this._super(...arguments);
         this.set('debugger', new Debug('Sync Engine'));
         this.startEngine();
     },
 
+    /**
+     * Starts the engine, which regularly calls syncronize();
+     */
     startEngine() {
         this.log('Started Synchronization Engine');
-        this.set('syncInterval', this.schedule(this.get('synchronize')));
+        this.set('syncInterval', this._schedule(this.get('synchronize')));
     },
 
+    /**
+     * Stops the engine, which regularly calls syncronize();
+     */
     stopEngine() {
         Ember.run.cancel(this.get('syncInterval'));
     },
 
-    schedule(f) {
+    /**
+     * Schedules a function to be run at a later point in time
+     * @param  {function} f - function to schedule
+     * @return {*}          - Timer information for use in cancelling, see `run.cancel`.
+     */
+    _schedule(f) {
         return Ember.run.later(this, () => {
             f.apply(this);
-            this.set('syncInterval', this.schedule(f));
+            this.set('syncInterval', this._schedule(f));
         }, 180000);
     },
 
@@ -40,7 +55,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      * Synchronize all accounts
      */
     async synchronize() {
-        if (this.get('isSyncEngineRunning') === true) {
+        if (this.get('isSyncEngineRunning')) {
             this.log('Sync Engine: Wanted to sync, but synchronization is already running');
             return;
         }
@@ -72,7 +87,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      */
     synchronizeAccount(account, isInitial) {
         return new Promise((resolve, reject) => {
-            if (!account) reject(new Error('Missing account parameter'));
+            if (!account) reject('Missing account parameter');
 
             this.log(`Synchronizing account`);
 
@@ -179,14 +194,10 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      * @return {Promise}
      */
     _replaceEventsInDB(start, end, events, account) {
-        return new Promise(resolve => {
-            if (!events || events.length === 0) {
-                resolve();
-                return;
-            }
+        return new Promise((resolve, reject) => {
+            if (!start || !end || !account || events === undefined) return reject('Missing parameters');
+            if (events && events.length === 0) return resolve(0);
 
-            const store = this.get('store');
-            const newEvents = [];
             const query = {
                 isCalendarQuery: true,
                 start: start.toISOString(),
@@ -194,25 +205,44 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             };
 
             this.log('Replacing events in database');
-
             account.deleteEventsWithQuery(query)
-                .then(async () => {
-                    // Replace them
-                    this.log(`Adding ${events.length} events in database`);
-                    for (let i = 0; i < events.length; i++) {
-                        const eventData = events[i];
-                        eventData.account = account;
-                        const newEvent = store.createRecord('event', eventData);
+                .then(() => this._addEventsToDb(events, account));
+        });
+    },
 
-                        newEvents.push(newEvent);
-                        await newEvent.save();
-                    }
+    /**
+     * Adds events to the database for a given account and a given timeframe
+     * with a new set of events
+     * @param  {moment} start    - Start of the search window
+     * @param  {moment} end      - End of the search window
+     * @param  {object[]} events - Replacement events
+     * @param  {object} account  - Account to operate on
+     * @return {Promise}
+     */
+    _addEventsToDb(events, account) {
+        return new Promise(async (resolve, reject) => {
+            if (!account || events === undefined) return reject('Missing parameters');
+            if (events && events.length === 0) return resolve(0);
+            this.log(`Adding ${events.length} events in database`);
 
-                    account.set('events', newEvents);
-                    await account.save();
-                    this.log('Events replaced');
-                    resolve();
-                });
+            const newEvents = [];
+            const store = this.get('store');
+            let eventData;
+            let newEvent;
+
+            for (let i = 0; i < events.length; i++) {
+                eventData = events[i];
+                eventData.account = account;
+                newEvent = store.createRecord('event', eventData);
+
+                newEvents.push(newEvent);
+                await newEvent.save();
+            }
+
+            account.set('events', newEvents);
+            await account.save();
+            this.log('Events replaced');
+            return resolve(events.length);
         });
     }
 });

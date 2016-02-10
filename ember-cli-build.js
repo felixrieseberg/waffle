@@ -1,27 +1,32 @@
 /*jshint node:true*/
 /* global require, module */
 var EmberApp = require('ember-cli/lib/broccoli/ember-app');
+var ENV = require('./config/environment');
 
 module.exports = function (defaults) {
+    const isTest = (process.env.EMBER_ENV || 'development') === 'test';
+    const blacklist = isTest ? [] : [
+        "es6.arrowFunctions",
+        "es6.blockScoping",
+        "es6.classes",
+        "es6.forOf",
+        "es6.templateLiterals",
+        "es6.constants",
+        "es6.properties.computed",
+        "es6.properties.shorthand"
+    ];
+
     var app = new EmberApp(defaults, {
         emberCliFontAwesome: {
             useScss: true
         },
         babel: {
             includePolyfill: true,
-            blacklist: [
-                "es6.arrowFunctions",
-                "es6.blockScoping",
-                "es6.classes",
-                "es6.forOf",
-                "es6.templateLiterals",
-                "es6.constants",
-                "es6.properties.computed",
-                "es6.properties.shorthand"
-            ]
+            blacklist: blacklist
         },
         hinting: false
     });
+
 
     app.import('bower_components/lato/font/lato-regular/lato-regular.ttf', { destDir: 'font/lato-regular' });
     app.import('bower_components/lato/font/lato-regular/lato-regular.eot', { destDir: 'font/lato-regular' });
