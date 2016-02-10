@@ -1,12 +1,21 @@
-<div class="settings md-modal md-event md-effect {{if isEnabled "md-show"}}" id="modal-2" style={{style}}>
+<div class="settings md-modal md-event md-effect {{if isEnabled "md-show"}}" id="modal-event-body" style={{style}}>
     <div class="md-content">
         <header>
             <span>{{event.title}}</span>
         </header>
         <div class="md-body">
-            <div>
-                <span>{{day}}, {{moment-hour event.start}} - {{moment-hour event.end}}</span>
-            </div>
+            <section>
+                <p><i class="fa fa-calendar"></i> {{day}}</p>
+                <p><i class="fa fa-clock-o"></i> {{moment-hour event.start}} <i class="fa fa-long-arrow-right"></i> {{moment-hour event.end}}</p>
+            </section>
+            {{#if event.location}}
+                <section class="event-location">
+                    <p {{action "openLocation"}}><i class="fa fa-map-marker"></i> {{event.location}}</p>
+                </section>
+            {{/if}}
+            {{#if event.body}}
+                {{b-event-modal-body body=event.body type=event.bodyType}}
+            {{/if}}
         </div>
     </div>
 </div>

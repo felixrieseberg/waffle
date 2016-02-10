@@ -5,6 +5,9 @@ export default Ember.Controller.extend({
 
     init() {
         this._super(...arguments);
-        this.get('synchro').synchronize();
+
+        // Start synchronization 5s after app launch to ensure that
+        // the database has a few seconds to wake up
+        setTimeout(() => this.get('synchro').synchronize(), 5000);
     }
 });

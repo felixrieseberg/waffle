@@ -80,8 +80,11 @@ export default Ember.Service.extend(Mixin, {
             const scope = '&scope=' + this.oa2.scopes.join(' ');
             const client = '?client_id=' + this.oa2.clientID;
             const nonce = (this.oa2.clientSecret) ? '' : '&response_mode=fragment&state=12345&nonce=678910';
-            const prompt = (existingUser) ? `&prompt=none&login_hint=${existingUser}&domain_hint=organizations` : '';
-            const authUrl = this.oa2.base + this.oa2.authUrl + client + resp + scope + red + prompt + nonce;
+            const prompt = (existingUser) ? `&prompt=none&login_hint=${existingUser}` : '';
+            // Todo: DomainHint is probably only correct for O365
+            const domainHint = (existingUser) ? '&domain_hint=organizations' : '';
+            const params = client + resp + scope + red + prompt + domainHint + nonce;
+            const authUrl = this.oa2.base + this.oa2.authUrl + params;
 
             let authWindow = new BrowserWindow({
                 width: 800,
@@ -137,6 +140,12 @@ export default Ember.Service.extend(Mixin, {
                             return occurences.push(item);
                         }
 
+                        if (item.reason && item.reason === 'deleted') {
+                            // Delta Update, event has been deleted
+                            // Probably no action required?
+                            return;
+                        }
+
                         events.push(this._makeEvent(item));
                     });
 
@@ -160,7 +169,7 @@ export default Ember.Service.extend(Mixin, {
 
                     if (er.statusCode && er.statusCode === 401) {
                         this.log('Office 365: Token probably expired, fetching new token');
-                        return this._updateToken(account)
+                        return this._reauthenticate(account)
                             .then(newToken => fetch(_url, newToken))
                             .catch(error => {
                                 this.log('Office 365: Attempted to getCalendarView', error);
@@ -285,41 +294,6 @@ export default Ember.Service.extend(Mixin, {
         });
     },
 
-    _updateToken(account) {
-        return new Promise((resolve, reject) => {
-            const oauth = account.get('oauth');
-
-            return this._reauthenticate(account);
-
-            // Authorization flow reauth
-            // -----------------------------------
-            // return this._requestToken(oauth.code)
-            //     .then((response) => {
-            //         // TODO: Error handling
-            //         console.log(response);
-            //         const newOauth = response;
-            //         newOauth.code = account.get('oauth').code;
-            //
-            //         account.set('oauth', oauth).save();
-            //         resolve(response.access_token);
-            //     })
-            //     .catch((error) => {
-            //         if (error.response && error.response.body) {
-            //             // Check if the code is expired, too
-            //             const errBody = error.response.body;
-            //             if (errBody.error_description && errBody.error_description.includes('AADSTS70008')) {
-            //                 // Let's authenticate the current account - again
-            //                 this.log('Office 365: Tried fetching new token, but code seems to be expired.');
-            //                 reject(new Error('code expired'));
-            //             }
-            //         } else {
-            //             console.log(error);
-            //             reject(error);
-            //         }
-            //     });
-        });
-    },
-
     _handleCallback(url, win, resolve, reject) {
         const rawCode = /code=([^&]*)/.exec(url) || null;
         const rawToken = /access_token=([^&]*)/.exec(url) || null;
@@ -350,6 +324,13 @@ export default Ember.Service.extend(Mixin, {
         }
     },
 
+    /**
+     * Reauthenticates a given account, essentially quietly opening a new
+     * window and hoping that O365/Microsoft lets us in without the user
+     * having to confirm anything
+     * @param  {object} account O365 account to fetch new token for
+     * @return {Promise}
+     */
     _reauthenticate(account) {
         return new Promise((resolve, reject) => {
             this.authenticate(account.get('username')).then((response) => {
@@ -366,19 +347,8 @@ export default Ember.Service.extend(Mixin, {
                 resolve(account);
             }).catch((err) => {
                 console.log(err);
-                reject(err)
+                reject(err);
             });
-        });
-    },
-
-    _reauthenticateAfterWarning(account) {
-        const user = account.get('username');
-        const error = `Your credentials for ${user} expired. Click to reauthenticate.`;
-
-        this.notifications.error(error, {
-            autoClear: true,
-            clearDuration: 3000,
-            onClick: this._reauthenticate(account)
         });
     }
 });

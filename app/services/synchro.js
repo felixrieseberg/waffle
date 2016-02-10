@@ -1,7 +1,6 @@
 import Ember from 'ember';
 import { inDays } from '../utils/time-utils';
 import { Mixin, Debug } from '../mixins/debugger';
-import { processArrayAsync } from '../utils/performance';
 
 export default Ember.Service.extend(Ember.Evented, Mixin, {
     store: Ember.inject.service(),
@@ -59,7 +58,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             promises.push(this.synchronizeAccount(accounts.content[i].record, false, start, end));
         }
 
-        Ember.RSVP.all(promises).then(() => this.set('isSyncEngineRunning', false));
+        Ember.RSVP.all(promises).finally(() => this.set('isSyncEngineRunning', false));
     },
 
     /**
@@ -127,28 +126,25 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
      */
     _replaceEventsInDB(start, end, events, account) {
         return new Promise(resolve => {
-            if (!events || events.length === 0) resolve();
+            if (!events || events.length === 0) {
+                resolve();
+                return;
+            }
 
             const store = this.get('store');
             const newEvents = [];
             const query = {
                 isCalendarQuery: true,
-                accountId: account.get('id'),
                 start: start.toISOString(),
                 end: end.toISOString()
             };
 
             this.log('Replacing events in database');
 
-            store.query('event', query)
-                .then((result) =>
-                    processArrayAsync(result.toArray(), (event) => {
-                        if (event) {
-                            event.destroyRecord().then(() => store.unloadRecord(event));
-                        }
-                    }, 25, this))
+            account.deleteEventsWithQuery(query)
                 .then(async () => {
                     // Replace them
+                    this.log(`Adding ${events.length} events in database`);
                     for (let i = 0; i < events.length; i++) {
                         const eventData = events[i];
                         eventData.account = account;

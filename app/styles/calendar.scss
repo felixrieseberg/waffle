@@ -120,18 +120,49 @@ ul.daynames {
     .md-modal.md-event {
         transform-origin: top left;
         width: 320px;
+        height: auto;
         top: 0;
         left: 0;
-        font-size: 1.4rem;
+        font-size: 1.5rem;
+        font-weight: 300;
+
+        p {
+            margin-bottom: 0rem;
+            transition: .5s;
+        }
 
         header {
             overflow: auto;
             height: auto;
 
             span {
-                font-weight: 300;
+                font-weight: 600;
                 font-size: 1.5rem;
             }
+        }
+
+        section {
+            border-bottom: 1px #EFEFEF solid;
+            padding: 10px 0;
+            height: initial;
+        }
+
+        section:first-of-type {
+            padding-top: 0;
+        }
+
+        section.event-body {
+            height: 300px;
+        }
+
+        section.event-location {
+            p:hover {
+                color: $butter-color;
+            }
+        }
+
+        .md-body {
+            height: auto;
         }
     }
 
