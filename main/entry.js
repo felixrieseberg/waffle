@@ -33,7 +33,8 @@ app.on('ready', function onReady() {
             height: 600,
             minHeight: 400,
             minWidth: 900,
-            title: 'Waffle Calendar'
+            title: 'Waffle Calendar',
+            titleBarStyle: 'hidden'
         });
 
         waffle();

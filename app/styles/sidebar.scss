@@ -1,7 +1,126 @@
-div.sidebar {
-    background: #F6F6F6;
-    width: 210px;
-    height: calc(100vh - 20px);
-    float: left;
-    padding: 10px;
+@import './colors';
+
+$sidebar-width: 250px;
+
+.pusher {
+	position: relative;
+	left: 0;
+	z-index: 99;
+	height: 100%;
+	perspective: 1000px;
+	transition: transform .5s, padding-right .5s;
+}
+
+.sidebar-visible .pusher::after {
+	width: 100%;
+	height: 100%;
+	opacity: 1;
+	transition: opacity 0.5s;
+}
+
+.sidebar {
+	position: absolute;
+	top: 51px;
+	left: 0;
+	z-index: 100;
+	visibility: hidden;
+	width: $sidebar-width;
+	height: calc(100% - 51px);
+	background: #FFFFFF;
+	transition: all 0.5s;
+    border-right: 1px solid $border-color;
+    box-sizing: border-box;
+    padding: 8px;
+}
+
+.sidebar-visible .sidebar::after {
+	width: 0;
+	height: 0;
+	opacity: 0;
+	transition: opacity 0.5s, width 0.1s 0.5s, height 0.1s 0.5s;
+}
+
+/* Effect: 3D "Door" */
+// .sidebar-effect.sidebar-container {
+// 	perspective: 1500px;
+// }
+//
+// .sidebar-effect .pusher {
+// 	transform-origin: 100% 50%;
+// 	transform-style: preserve-3d;
+// }
+//
+// .sidebar-effect.sidebar-visible .pusher {
+// 	transform: rotateY(-15deg) translate3d($sidebar-width, 0, 0);
+// }
+//
+// .sidebar-effect.sidebar {
+// 	opacity: 1;
+// 	transform: translate3d(-100%, 0, 0);
+// }
+//
+// .sidebar-effect.sidebar-visible .sidebar-effect.sidebar {
+// 	visibility: visible;
+// 	transition: transform 0.5s;
+// 	transform: translate3d(0, 0, 0);
+// }
+//
+// .sidebar-effect.sidebar::after {
+// 	display: none;
+// }
+
+/* Effect: 3D rotate out */
+// .sidebar-effect.sidebar-container {
+// 	-webkit-perspective: 1500px;
+// 	perspective: 1500px;
+// 	-webkit-perspective-origin: 0% 50%;
+// 	perspective-origin: 0% 50%;
+// }
+//
+// .sidebar-effect .pusher {
+// 	-webkit-transform-style: preserve-3d;
+// 	transform-style: preserve-3d;
+// }
+//
+// .sidebar-effect.sidebar-visible .pusher {
+// 	-webkit-transform: translate3d($sidebar-width, 0, 0);
+// 	transform: translate3d($sidebar-width, 0, 0);
+// }
+//
+// .sidebar-effect.sidebar {
+// 	-webkit-transform: translate3d(-100%, 0, 0) rotateY(90deg);
+// 	transform: translate3d(-100%, 0, 0) rotateY(90deg);
+// 	-webkit-transform-origin: 100% 50%;
+// 	transform-origin: 100% 50%;
+// 	-webkit-transform-style: preserve-3d;
+// 	transform-style: preserve-3d;
+// }
+//
+// .sidebar-effect.sidebar-visible .sidebar-effect.sidebar {
+// 	visibility: visible;
+// 	-webkit-transition: -webkit-transform 0.5s;
+// 	transition: transform 0.5s;
+// 	-webkit-transform: translate3d(-100%, 0, 0) rotateY(0deg);
+// 	transform: translate3d(-100%, 0, 0) rotateY(0deg);
+// }
+//
+// .sidebar-effect.sidebar::after {
+// 	display: none;
+// }
+
+/* Effect 4: Slide along */
+.sidebar-effect.sidebar-visible .pusher {
+	transform: translate3d($sidebar-width, 0, 0);
+    padding-right: 250px;
+}
+
+.sidebar-effect.sidebar {
+	z-index: 1;
+	transform: translate3d(-50%, 0, 0);
+}
+
+.sidebar-effect.sidebar-visible .sidebar-effect.sidebar {
+	visibility: visible;
+	transition: transform 0.5s;
+	transform: translate3d(0, 0, 0);
 }

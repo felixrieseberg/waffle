@@ -10,6 +10,10 @@ export default Ember.Component.extend({
             this.sendAction('calendarViewChangeHandler', newView);
         },
 
+        toggleSidebar() {
+            this.toggleProperty('isSidebarVisible');
+        },
+
         moveCalendar(direction) {
             const currentTargetDate = this.get('targetDate');
             const currentView = this.get('currentView');

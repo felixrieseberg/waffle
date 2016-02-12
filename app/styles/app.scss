@@ -3,8 +3,11 @@
 @import './skeleton';
 @import './sidebar';
 @import './calendar';
+@import './calendar-modal';
 @import './modal';
 @import './settings';
+@import './animations';
+@import './menubar';
 
 // Font
 @import 'bower_components/lato/scss/lato';
@@ -14,6 +17,7 @@
 html body {
     font-family: "Lato","Geneva CY","Lucida Grande","Arial Unicode MS","Helvetica Neue","Helvetica","Arial",sans-serif;
     overflow: hidden;
+    background-color: #fff;
 }
 
 [data-ember-action] {
@@ -21,10 +25,11 @@ html body {
 }
 
 div.main {
-    width: calc(100vw - 250px);
-    height: calc(100vh - 20px);
-    padding: 10px;
-    float: right;
+    height: calc(100vh - #{$menubar-height});
+    padding: 8px;
+    background-color: #fff;
+    animation: fadein 1.5s;
+    box-sizing: border-box;
 }
 
 .clear {

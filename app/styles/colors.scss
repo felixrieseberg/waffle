@@ -2,6 +2,16 @@ $yellow: RGBA(249, 176, 28, 1);
 $yellow-light: RGBA(248, 247, 181, 1);
 $brown: RGBA(67, 29, 11, 1);
 $brown-light: RGBA(173, 82, 40, 1);
-$butter-color: #E79022;
+$butter-color: rgba(255, 175, 27, 1);
 $butter-color-light: rgba(231,144,34,0.05);
 $waffle-color: #D69A49;
+$waffle-color-light: lighten($waffle-color, 20);
+
+$seperator-color: #e1e1e1;
+$border-color: #eaf0f0;
+
+$top-color: rgba(250, 250, 250, 1);
+$bottom-color: rgba(242, 242, 242, 1);
+
+// Vars
+$menubar-height: 51px;

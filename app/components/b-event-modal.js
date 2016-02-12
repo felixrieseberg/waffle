@@ -39,6 +39,10 @@ export default Ember.Component.extend({
         }
     }),
 
+    didReceiveAttrs() {
+        this.set('isFullBodyVisible', false);
+    },
+
     actions: {
         toggleVisibility() {
             this.toggleProperty('isEnabled');

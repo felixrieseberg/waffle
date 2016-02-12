@@ -32,5 +32,11 @@ export default ApplicationAdapter.extend({
         data.windows = (data.windows) ? JSON.stringify(data.windows) : data.windows;
 
         return this._super(data);
+    },
+
+    deleteRecord(store, type, snapshot) {
+        const record = snapshot.record;
+        record.deleteAllEvents()
+            .then(() => this._super(...arguments));
     }
 });

@@ -1,5 +1,6 @@
 @import './skeleton';
 @import './colors';
+@import './animations';
 
 $monthly-cell-width: 14.28571%;
 
@@ -8,38 +9,9 @@ $monthly-cell-width: 14.28571%;
     display: inline-block;
 }
 
-.calendar-header {
-    height: 50px;
-
-    .buttons {
-        float: right;
-    }
-
-    h4 {
-        float: left;
-        margin-bottom: 0;
-    }
-}
-
-ul.daynames {
-    height: 40px;
-    width: 100%;
-    margin-bottom: 0px;
-    overflow: hidden;
-    list-style: none;
-
-    li {
-        float: left;
-        width: $monthly-cell-width;
-        font-size: 14px;
-        line-height: 44px;
-        text-align: center;
-    }
-}
-
-// Calendar View
 .calendar {
-    height: calc(100% - 90px);
+    // 21px from the daynames, resulting in 100% for the calendar
+    height: calc(100% - 21px);
 
     div {
         box-sizing: border-box;
@@ -78,7 +50,6 @@ ul.daynames {
             font-size: 1.25rem;
             margin: 0;
             padding: 0;
-            -webkit-animation: fadein 1s;
             animation: fadein 1s;
             list-style-type: none;
             width: 100%;
@@ -124,97 +95,18 @@ ul.daynames {
         border: 1px solid $butter-color;
         background-color: $butter-color-light;
     }
-
-    .md-modal.md-event {
-        transform-origin: top left;
-        width: 320px;
-        height: auto;
-        top: 0;
-        left: 0;
-        font-size: 1.5rem;
-        font-weight: 300;
-
-        p {
-            margin-bottom: 0rem;
-            transition: .5s;
-        }
-
-        header {
-            overflow: auto;
-            height: auto;
-
-            span {
-                font-weight: 600;
-                font-size: 1.5rem;
-            }
-
-            .tiny-button {
-                float: right;
-                margin-bottom: 0;
-            }
-        }
-
-        section {
-            border-bottom: 1px #EFEFEF solid;
-            padding: 10px 0;
-            height: initial;
-        }
-
-        section:first-of-type {
-            padding-top: 0;
-        }
-
-        section.event-body {
-            height: 300px;
-            animation: fadein 1s;
-        }
-
-        section.event-body-preview {
-            display: flex;
-            flex-direction: row;
-        }
-
-        section.event-body-preview .left {
-            white-space: pre-wrap;
-            width: 90%;
-            font-size: .85em;
-            overflow: scroll;
-        }
-
-        section.event-body-preview .right {
-            width: 10%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-left: 1px solid #EFEFEF;
-            margin-left: 3px;
-
-            i {
-                padding-left: 5px;
-            }
-        }
-
-        section.event-body-preview .left::after {
-            content: "…";
-        }
-
-        section.event-location {
-            p:hover {
-                color: $butter-color;
-            }
-        }
-
-        .md-body {
-            height: auto;
-        }
-    }
-
-    .md-overlay.md-event {
-        background: none;
-    }
 }
 
-@keyframes fadein {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+ul.daynames {
+    margin-bottom: 0px;
+    overflow: hidden;
+    list-style: none;
+
+    li {
+        float: left;
+        width: $monthly-cell-width;
+        font-size: 14px;
+        line-height: 11px;
+        text-align: center;
+    }
 }

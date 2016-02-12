@@ -3,8 +3,8 @@ import moment from 'moment';
 
 export default Ember.Controller.extend({
     synchro: Ember.inject.service(),
-
     settingsVisible: false,
+    sidebarVisible: false,
 
     init() {
         this._super(...arguments);

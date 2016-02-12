@@ -1,16 +1,21 @@
-{{b-sidebar toggleSettings="toggleSettings"}}
+{{b-calendar-header
+    targetDate=targetDate
+    currentView=currentView
+    targetDateChangeHandler="targetDateChangeHandler"
+    calendarViewChangeHandler="calendarViewChangeHandler"
+    isSidebarVisible=isSidebarVisible
+}}
 
-<div class="main">
-    {{b-calendar-header
-        targetDate=targetDate
-        currentView=currentView
-        targetDateChangeHandler="targetDateChangeHandler"
-        calendarViewChangeHandler="calendarViewChangeHandler"
-    }}
-    {{b-calendar-monthly
-        targetDate=targetDate
-        accounts=model
-    }}
+<div class="sidebar-container sidebar-effect {{if isSidebarVisible "sidebar-visible"}}">
+    {{b-sidebar toggleSettings="toggleSettings"}}
+    <div class="pusher">
+        <div class="main">
+            {{b-calendar-monthly
+                targetDate=targetDate
+                accounts=model
+            }}
+        </div>
+    </div>
 </div>
 
 {{b-settings isEnabled=settingsVisible}}

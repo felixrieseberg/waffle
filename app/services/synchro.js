@@ -1,5 +1,6 @@
 import Ember from 'ember';
 import { inDays } from '../utils/time-utils';
+import * as shutdown from '../utils/shutdown';
 import { Mixin, Debug } from '../mixins/debugger';
 import moment from 'moment';
 
@@ -207,8 +208,10 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             };
 
             this.log('Replacing events in database');
+            shutdown.prevent();
             account.deleteEventsWithQuery(query)
-                .then(() => this._addEventsToDb(events, account));
+                .then(() => this._addEventsToDb(events, account))
+                .finally(() => shutdown.release());
         });
     },
 
@@ -232,6 +235,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             let eventData;
             let newEvent;
 
+            this.time('Inserting Events');
             for (let i = 0; i < events.length; i++) {
                 eventData = events[i];
                 eventData.account = account;
@@ -241,9 +245,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                 await newEvent.save();
             }
 
-            account.set('events', newEvents);
-            await account.save();
             this.log('Events replaced');
+            this.timeEnd('Inserting Events');
             return resolve(events.length);
         });
     }

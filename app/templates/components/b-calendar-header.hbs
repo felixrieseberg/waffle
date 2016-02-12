@@ -1,7 +1,12 @@
-{{b-calendar-title currentView=currentView targetDate=targetDate}}
-<div class="buttons">
-    <button {{action "calendarViewChangeHandler" "weekly"}}>Week View</button>
-    <button {{action "calendarViewChangeHandler" "monthly"}}>Month View</button>
-    <button {{action "moveCalendar" "back"}} class="icon-rewind"></button>
-    <button {{action "moveCalendar" "forward"}} class="icon-forward"></button>
+<div class="left">
+    <a {{action "toggleSidebar"}} title="Open Sidebar" class="header-button icon-cmd"></a>
+</div>
+<div class="center">
+    {{b-calendar-title currentView=currentView targetDate=targetDate}}
+</div>
+<div class="right">
+    {{!-- <a {{action "calendarViewChangeHandler" "weekly"}}>Week View</a>
+    <a {{action "calendarViewChangeHandler" "monthly"}}>Month View</a> --}}
+    <a {{action "moveCalendar" "back"}} title="Go Forward" class="header-button icon-rewind"></a>
+    <a {{action "moveCalendar" "forward"}} title="Go Back" class="header-button icon-forward"></a>
 </div>

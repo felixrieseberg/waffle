@@ -1,0 +1,64 @@
+@import './colors';
+
+.calendar-header {
+    height: $menubar-height;
+    background-image: linear-gradient($top-color, $bottom-color);
+    border-bottom: 1px solid $bottom-color;
+    padding: 5px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: row;
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
+    box-sizing: border-box;
+
+    .center, .left, .right {
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        flex-direction: row;
+    }
+
+    .right {
+        display: flex;
+        justify-content: flex-end;
+        align-content: center;
+        flex-direction: row;
+        padding-right: 10px;
+        box-sizing: border-box;
+    }
+
+
+    div.left, div.right {
+        width: 25%
+    }
+
+    div.center {
+        width: 50%
+    }
+
+    h4 {
+        font-size: 1.5em;
+        margin: 0;
+        padding: 0;
+        line-height: 2.3em;
+        cursor: unset;
+    }
+
+    a.header-button {
+        cursor: pointer;
+        transition: .5s;
+        font-size: 2em;
+        padding: 9px;
+        line-height: 15px;
+        color: #abafb2;
+        -webkit-app-region: no-drag;
+    }
+
+    a.header-button:hover {
+        transition: .5s;
+        color: $waffle-color-light;
+    }
+}
