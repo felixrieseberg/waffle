@@ -1,8 +1,7 @@
+import { shutdown } from './shutdown';
+
 export default function setup() {
-    const electron = requireNode('electron');
-    const app = requireNode('electron').app;
-    const remote = electron.remote;
-    const Menu = remote.Menu;
+    const Menu = requireNode('electron').remote.Menu;
     const template = [
         {
             label: 'Edit',
@@ -154,7 +153,7 @@ export default function setup() {
                     label: 'Quit',
                     accelerator: 'Command+Q',
                     click() {
-                        app.quit();
+                        shutdown();
                     }
                 }
             ]
