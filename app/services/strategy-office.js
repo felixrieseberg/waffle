@@ -35,7 +35,7 @@ export default Ember.Service.extend(Mixin, {
 
                 const newAccount = this.get('store').createRecord('account', {
                     name: 'Office 365',
-                    username: this.getEmailFromToken(response.id_token),
+                    username: this._getEmailFromToken(response.id_token),
                     strategy: 'office',
                     oauth: response
                 }).save();
@@ -59,17 +59,6 @@ export default Ember.Service.extend(Mixin, {
                     resolve(events, deltaToken);
                 });
         });
-    },
-
-    getEmailFromToken(token) {
-        if (!token) return null;
-
-        const tokenParts = token.split('.');
-        const encodedToken = new Buffer(tokenParts[1].replace('-', '_').replace('+', '/'), 'base64');
-        const decodedToken = encodedToken.toString();
-        const jwt = JSON.parse(decodedToken);
-
-        return jwt.preferred_username;
     },
 
     authenticate(existingUser) {
@@ -111,6 +100,17 @@ export default Ember.Service.extend(Mixin, {
                 reject();
             }, false);
         });
+    },
+
+    _getEmailFromToken(token) {
+        if (!token) return null;
+
+        const tokenParts = token.split('.');
+        const encodedToken = new Buffer(tokenParts[1].replace('-', '_').replace('+', '/'), 'base64');
+        const decodedToken = encodedToken.toString();
+        const jwt = JSON.parse(decodedToken);
+
+        return jwt.preferred_username;
     },
 
     _fetchEvents(url, token, syncOptions, account) {
@@ -339,7 +339,7 @@ export default Ember.Service.extend(Mixin, {
     _reauthenticate(account) {
         return new Promise((resolve, reject) => {
             this.authenticate(account.get('username')).then((response) => {
-                if (!response) return;
+                if (!response || !response.access_token) reject('No response received');
 
                 account.setProperties({
                     name: 'Office 365',
@@ -349,7 +349,7 @@ export default Ember.Service.extend(Mixin, {
                 });
                 account.save();
 
-                resolve(account);
+                resolve(response.access_token);
             }).catch((err) => {
                 console.log(err);
                 reject(err);

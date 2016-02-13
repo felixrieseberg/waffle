@@ -18,12 +18,14 @@ export default Ember.Component.extend({
             const currentTargetDate = this.get('targetDate');
             const currentView = this.get('currentView');
             const distance = (currentView === 'monthly') ? 'month' : 'week';
-            const newTargetDate = moment(currentTargetDate, 'YYYY-MM-DD');
+            let newTargetDate = moment(currentTargetDate, 'YYYY-MM-DD');
 
             if (direction === 'forward') {
                 newTargetDate.add(1, distance);
             } else if (direction === 'back') {
                 newTargetDate.subtract(1, distance);
+            } else if (direction === 'today') {
+                newTargetDate = moment();
             }
 
             this.sendAction('targetDateChangeHandler', newTargetDate.format('YYYY-MM-DD'));

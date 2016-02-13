@@ -45,7 +45,7 @@
     "ember-component-inbound-actions": "0.0.4",
     "ember-data": "^2.3.0",
     "ember-disable-proxy-controllers": "^1.0.1",
-    "ember-electron": "^0.4.2",
+    "ember-electron": "^0.5.1",
     "ember-export-application-global": "^1.0.4",
     "ember-inflector": "^1.9.4",
     "ember-resolver": "^2.0.3",
