@@ -3,8 +3,8 @@ import moment from 'moment';
 
 export default Ember.Controller.extend({
     synchro: Ember.inject.service(),
-    settingsVisible: false,
-    sidebarVisible: false,
+    isSettingsVisible: false,
+    isSidebarVisible: false,
 
     init() {
         this._super(...arguments);
@@ -21,10 +21,6 @@ export default Ember.Controller.extend({
     },
 
     actions: {
-        toggleSettings() {
-            this.toggleProperty('settingsVisible');
-        },
-
         sync() {
             this.get('synchro').synchronize();
         },

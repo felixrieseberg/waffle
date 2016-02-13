@@ -7,15 +7,15 @@
 }}
 
 <div class="sidebar-container sidebar-effect {{if isSidebarVisible "sidebar-visible"}}">
-    {{b-sidebar toggleSettings="toggleSettings"}}
-    <div class="pusher">
+    {{b-sidebar isSettingsVisible=isSettingsVisible}}
+    {{#b-sidebar-pusher isSidebarVisible=isSidebarVisible}}
         <div class="main">
             {{b-calendar-monthly
                 targetDate=targetDate
                 accounts=model
             }}
         </div>
-    </div>
+    {{/b-sidebar-pusher}}
 </div>
 
 {{b-settings isEnabled=settingsVisible}}

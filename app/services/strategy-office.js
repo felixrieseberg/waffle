@@ -343,7 +343,7 @@ export default Ember.Service.extend(Mixin, {
 
                 account.setProperties({
                     name: 'Office 365',
-                    username: response.id_token ? this.getEmailFromToken(response.id_token) : 'O365',
+                    username: response.id_token ? this._getEmailFromToken(response.id_token) : 'O365',
                     strategy: 'office',
                     oauth: response
                 });

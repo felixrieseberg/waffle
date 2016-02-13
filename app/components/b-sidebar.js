@@ -5,7 +5,7 @@ export default Ember.Component.extend({
 
     actions: {
         toggleSettings() {
-            this.sendAction('toggleSettings');
+            this.toggleProperty('isSettingsVisible');
         }
     }
 });

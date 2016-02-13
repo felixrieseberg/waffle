@@ -2,8 +2,8 @@
 
 .calendar-header {
     height: $menubar-height;
-    background-image: linear-gradient($top-color, $bottom-color);
-    border-bottom: 1px solid $bottom-color;
+    background-image: linear-gradient($header-top-color, $header-bottom-color);
+    border-bottom: 1px solid $seperator-color;
     padding: 5px;
     width: 100%;
     display: flex;
@@ -44,21 +44,42 @@
         margin: 0;
         padding: 0;
         line-height: 2.3em;
-        cursor: unset;
+        cursor: default;
     }
 
     a.header-button {
         cursor: pointer;
-        transition: .5s;
-        font-size: 2em;
-        padding: 9px;
-        line-height: 15px;
+        transition: .2s;
+        margin-top: 9px;
+        margin-bottom: 9px;
+        margin-right: 0;
+        margin-left: 0;
+        padding-left: 9px;
+        padding-right: 9px;
         color: #abafb2;
         -webkit-app-region: no-drag;
+        font-size: 1.2em;
+        line-height: 1.9em;
+        height: 27px;
+        border-right: 1px solid $seperator-header-buttons-color;
+    }
+
+    a.header-button:last-of-type {
+        border-right: 0;
+        margin-right: 0;
+    }
+
+    a.header-button.icon-button {
+        line-height: 27px;
+        font-size: 2em;
+        padding-left: 0;
+        padding-right: 0;
     }
 
     a.header-button:hover {
         transition: .5s;
         color: $waffle-color-light;
     }
+
+
 }

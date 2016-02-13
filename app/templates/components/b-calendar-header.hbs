@@ -1,6 +1,10 @@
 <div class="left">
-    <a {{action "toggleSidebar"}} title="Open Sidebar" class="header-button icon-cmd"></a>
-    <a {{action "toggleNotifications"}} title="Show Notifications" class="header-button icon-comments"></a>
+    <a {{action "toggleSidebar"}} title="Open Sidebar" class="header-button icon-button">
+        <i class="icon-setting2"></i>
+    </a>
+    <a {{action "toggleNotifications"}} title="Show Notifications" class="header-button icon-button">
+        <i class="icon-chat1"></i>
+    </a>
 </div>
 <div class="center">
     {{b-calendar-title currentView=currentView targetDate=targetDate}}
@@ -8,7 +12,13 @@
 <div class="right">
     {{!-- <a {{action "calendarViewChangeHandler" "weekly"}}>Week View</a>
     <a {{action "calendarViewChangeHandler" "monthly"}}>Month View</a> --}}
-    <a {{action "moveCalendar" "back"}} title="Go Forward" class="header-button icon-rewind"></a>
-    <a {{action "moveCalendar" "today"}} title="Go to Today" class="header-button icon-pin-alt"></a>
-    <a {{action "moveCalendar" "forward"}} title="Go Back" class="header-button icon-forward"></a>
+    <a {{action "moveCalendar" "back"}} title="Go Back" class="header-button icon-button">
+        <i class="icon-arrow48"></i>
+    </a>
+    <a {{action "moveCalendar" "today"}} title="Go to Today" class="header-button">
+        Today
+    </a>
+    <a {{action "moveCalendar" "forward"}} title="Go Forward" class="header-button icon-button">
+        <i class="icon-arrow43"></i>
+    </a>
 </div>

@@ -1,3 +1,4 @@
+// Main
 $yellow: RGBA(249, 176, 28, 1);
 $yellow-light: RGBA(248, 247, 181, 1);
 $brown: RGBA(67, 29, 11, 1);
@@ -7,11 +8,13 @@ $butter-color-light: rgba(231,144,34,0.05);
 $waffle-color: #D69A49;
 $waffle-color-light: lighten($waffle-color, 20);
 
+// Borders
 $seperator-color: #e1e1e1;
 $border-color: #eaf0f0;
 
-$top-color: rgba(250, 250, 250, 1);
-$bottom-color: rgba(242, 242, 242, 1);
-
-// Vars
+// Header
+$header-button-color: #abafb2;
+$seperator-header-buttons-color: #dfe3e4;
+$header-top-color: rgba(250, 250, 250, 1);
+$header-bottom-color: rgba(242, 242, 242, 1);
 $menubar-height: 51px;
