@@ -1,6 +1,6 @@
 export function initialize(application) {
     // TODO: Magic logic to find all stragies
-    const strategies = ['office'];
+    const strategies = ['office', 'google'];
 
     strategies.forEach((strategyName) => {
         application.inject('component', `strategy:${strategyName}`, `service:strategy-${strategyName}`);

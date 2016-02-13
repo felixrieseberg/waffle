@@ -1,4 +1,4 @@
-# Butter
+# Waffle
 
 There really isn't anything interesting here (yet).
 
@@ -13,8 +13,8 @@ You will need the following things properly installed on your computer.
 
 ## Installation
 
-* `git clone https://github.com/felixrieseberg/butter`
-* `cd butter`
+* `git clone https://github.com/felixrieseberg/waffle`
+* `cd waffle`
 * `npm install`
 * `bower install`
 
