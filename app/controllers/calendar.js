@@ -23,10 +23,6 @@ export default Ember.Controller.extend({
     actions: {
         sync() {
             this.get('synchro').synchronize();
-        },
-
-        targetDateChangeHandler(newDate) {
-            this.set('targetDate', newDate);
         }
     }
 });

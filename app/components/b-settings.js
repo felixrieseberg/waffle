@@ -4,8 +4,8 @@ import { Mixin, Debug } from '../mixins/debugger';
 export default Ember.Component.extend(Mixin, {
     store: Ember.inject.service('store'),
     synchro: Ember.inject.service(),
-
     currentView: 'accounts',
+    isSyncing: Ember.computed.alias('synchro.isSyncEngineRunning'),
 
     init() {
         this._super(...arguments);
@@ -42,9 +42,8 @@ export default Ember.Component.extend(Mixin, {
         },
 
         removeAccount(account) {
+            // Todo: Implement "confirm"
             account.deleteRecord();
-
-            // TODO: Implement undo
             account.save();
         },
 
@@ -60,6 +59,10 @@ export default Ember.Component.extend(Mixin, {
         switchToPreferences() {
             this.set('isAccounts', false);
             this.set('isPreferences', true);
+        },
+
+        sync() {
+            this.get('synchro').synchronize();
         }
     }
 });

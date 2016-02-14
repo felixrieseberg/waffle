@@ -25,10 +25,10 @@ export default Ember.Component.extend({
             } else if (direction === 'back') {
                 newTargetDate.subtract(1, distance);
             } else if (direction === 'today') {
-                newTargetDate = moment();
+                newTargetDate = moment().date(1);
             }
 
-            this.sendAction('targetDateChangeHandler', newTargetDate.format('YYYY-MM-DD'));
+            this.set('targetDate', newTargetDate.format('YYYY-MM-DD'));
         }
     }
 });

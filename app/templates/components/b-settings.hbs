@@ -3,7 +3,7 @@
         <header>
             <ul>
                 <li class="{{if isPreferences "selected"}}" {{action "switchToPreferences"}}>
-                    <i class="icon icon-settings"></i>
+                    <i class="icon icon-setting3"></i>
                     <span class="label">Preferences</span>
                 </li>
                 <li class="{{if isAccounts "selected"}}" {{action "switchToAccounts"}}>
@@ -15,7 +15,15 @@
         <div class="md-body">
             {{#if isPreferences}}
                 <div>
-                    
+                    <section>
+                        {{#if isSyncing}}
+                            <a class="button" disabled><i class="icon-arrow20 animate-spin"></i>Syncing</a>
+                            <p>The synchronization engine is currently running.</p>
+                        {{else}}
+                            <p>The synchronization engine is currently not running.</p>
+                            <a class="button" {{action "sync"}}>Start Synchronization</a>
+                        {{/if}}
+                    </section>
                 </div>
             {{else if isAccounts}}
                 <div>

@@ -1,14 +1,28 @@
 .settings {
     ul.accounts {
         list-style: none;
-        
+
         li {
             list-style: none;
         }
-        
+
         button {
             float: right;
             margin-top: -19px;
         }
+    }
+
+    h4 {
+        font-size: 1.8em;
+        margin-bottom: .2em;
+    }
+
+    p {
+        margin-bottom: 1em;
+    }
+
+    section {
+        border-bottom: 1px solid $seperator-color;
+        text-align: center;
     }
 }

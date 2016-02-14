@@ -49,7 +49,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         return Ember.run.later(this, () => {
             f.apply(this);
             this.set('syncInterval', this._schedule(f));
-        }, 180000);
+        }, 120000);
     },
 
     /**
