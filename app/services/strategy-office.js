@@ -47,14 +47,21 @@ export default Ember.Service.extend(Mixin, {
 
     getCalendarView(startDate, endDate, account, syncOptions) {
         return new Promise((resolve) => {
+            const URI = require('urijs');
+
+            const oauth = account.get('oauth');
+            const username = account.get('username');
+
             const start = moment(startDate).toISOString();
             const end = moment(endDate).toISOString();
 
-            const base = `${this.api.base}users/${account.get('username')}/calendarview`;
-            const oauth = account.get('oauth');
-            const url = `${base}?startDateTime=${start}&endDateTime=${end}`;
+            const fetchURL = URI(`${this.api.base}users/${username}/calendarview`);
+            fetchURL.setQuery({
+              'startDateTime': `${start}`,
+              'endDateTime': `${end}`
+            });
 
-            return this._fetchEvents(url, oauth.access_token, syncOptions, account)
+            return this._fetchEvents(fetchURL.toString(), oauth.access_token, syncOptions, account)
                 .then((events, deltaToken) => {
                     resolve(events, deltaToken);
                 });
@@ -63,17 +70,36 @@ export default Ember.Service.extend(Mixin, {
 
     authenticate(existingUser) {
         return new Promise((resolve, reject) => {
+            const URI = require('urijs');
             const BrowserWindow = require('electron').remote.BrowserWindow;
-            const resp = (this.oa2.clientSecret) ? '&response_type=code' : '&response_type=id_token+token';
-            const red = '&redirect_uri=https%3A%2F%2Fredirect.butter';
-            const scope = '&scope=' + this.oa2.scopes.join(' ');
-            const client = '?client_id=' + this.oa2.clientID;
-            const nonce = (this.oa2.clientSecret) ? '' : '&response_mode=fragment&state=12345&nonce=678910';
-            const prompt = (existingUser) ? `&prompt=none&login_hint=${existingUser}` : '';
-            // Todo: DomainHint is probably only correct for O365
-            const domainHint = (existingUser) ? '&domain_hint=organizations' : '';
-            const params = client + resp + scope + red + prompt + domainHint + nonce;
-            const authUrl = this.oa2.base + this.oa2.authUrl + params;
+
+            const authUrl = URI(this.oa2.base + this.oa2.authUrl);
+
+            authUrl.setQuery({
+              'redirect_uri': 'https://redirect.butter',
+              'scope': this.oa2.scopes.join(' '),
+              'client_id': this.oa2.clientID
+            });
+
+            if (this.oa2.clientSecret) {
+              authUrl.setQuery({
+                'response_type': 'code',
+                'response_mode': 'fragment',
+                'state': '12345',
+                'nonce': '678910'
+              });
+            } else {
+              authUrl.setQuery('response_type', 'id_token+token');
+            }
+
+            if (existingUser) {
+              // Todo: DomainHint is probably only correct for O365
+              authUrl.setQuery({
+                'prompt': 'none',
+                'login_hint': `${existingUser}`,
+                'domain_hint': 'organizations'
+              });
+            }
 
             let authWindow = new BrowserWindow({
                 width: 800,
@@ -82,7 +108,7 @@ export default Ember.Service.extend(Mixin, {
                 'node-integration': false
             });
 
-            authWindow.loadURL(authUrl);
+            authWindow.loadURL(authUrl.toString());
 
             if (!existingUser) {
                 authWindow.show();
@@ -115,14 +141,16 @@ export default Ember.Service.extend(Mixin, {
 
     _fetchEvents(url, token, syncOptions, account) {
         return new Promise((resolve, reject) => {
+            const URI = require('urijs');
+
             const events = [];
             const occurences = [];
             const masters = [];
-            let firstUrl = url;
-            let deltaToken;
+            let firstUrl = URI(url);
+            let deltaToken =  account.get('sync.deltaToken');
 
-            if (syncOptions.useDelta && account.get('sync.deltaToken')) {
-                firstUrl += `&$deltatoken=${account.get('sync.deltaToken')}`;
+            if (syncOptions.useDelta && deltaToken) {
+                firstUrl.setQuery('deltatoken', `${deltaToken}`);
             }
 
             const fetch = (_url, _token, _trackChanges) => {
@@ -185,7 +213,7 @@ export default Ember.Service.extend(Mixin, {
                 });
             };
 
-            fetch(firstUrl, token, syncOptions.trackChanges);
+            fetch(firstUrl.toString(), token, syncOptions.trackChanges);
         });
     },
 
