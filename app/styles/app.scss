@@ -8,6 +8,7 @@
 @import './settings';
 @import './animations';
 @import './menubar';
+@import './selection';
 
 // Font
 @import 'bower_components/lato/scss/lato';
@@ -39,4 +40,13 @@ div.main {
 .button.tiny-button {
     height: 30px;
     line-height: 28px;
+}
+
+button:disabled, a.button.disabled {
+    background: rgba(136, 136, 136, .1);
+}
+
+button:disabled:hover, a.button.disabled:hover {
+    border-color: #BBB;
+    cursor: unset;
 }

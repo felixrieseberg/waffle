@@ -74,6 +74,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
         Ember.RSVP.allSettled(promises)
             .then(() => this.trigger('update'))
+            .catch((e) => console.error(e))
             .finally(() => this.set('isSyncEngineRunning', false));
     },
 
@@ -110,10 +111,11 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                         account.save();
                     }
 
-                    return this._replaceEventsInDB(start, end, result.events, account).then(() => {
-                        this.trigger('update');
-                        return resolve(account);
-                    });
+                    return this._replaceEventsInDB(start, end, result.events, account)
+                        .then(() => {
+                            this.trigger('update');
+                            return resolve(account);
+                        });
                 })
                 .then(() => {
                     this._updateWindow(account, syncWindow);
@@ -211,6 +213,8 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
             shutdown.prevent();
             account.deleteEventsWithQuery(query)
                 .then(() => this._addEventsToDb(events, account))
+                .then(() => resolve())
+                .catch(() => reject())
                 .finally(() => shutdown.release());
         });
     },

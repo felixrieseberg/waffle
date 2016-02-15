@@ -83,20 +83,22 @@ export default Ember.Service.extend(Mixin, {
 
             if (this.oa2.clientSecret) {
               authUrl.setQuery({
-                'response_type': 'code',
-                'response_mode': 'fragment',
-                'state': '12345',
-                'nonce': '678910'
+                'response_type': 'code'
               });
             } else {
-              authUrl.setQuery('response_type', 'id_token+token');
+              authUrl.setQuery({
+                  'response_type': 'id_token token',
+                  'response_mode': 'fragment',
+                  'state': '12345',
+                  'nonce': '678910'
+              });
             }
 
             if (existingUser) {
               // Todo: DomainHint is probably only correct for O365
               authUrl.setQuery({
                 'prompt': 'none',
-                'login_hint': `${existingUser}`,
+                'login_hint': existingUser,
                 'domain_hint': 'organizations'
               });
             }
@@ -107,6 +109,8 @@ export default Ember.Service.extend(Mixin, {
                 show: false,
                 'node-integration': false
             });
+
+            console.log(authUrl.toString());
 
             authWindow.loadURL(authUrl.toString());
 

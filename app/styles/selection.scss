@@ -1,0 +1,9 @@
+* {
+    -webkit-user-select: none;
+},
+
+div {
+    p, span, div {
+        cursor: default;
+    }
+}
