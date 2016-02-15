@@ -18,7 +18,7 @@ exports.up = function(knex, Promise) {
 
         knex.schema.createTableIfNotExists('events', (table) => {
             table.increments('id').primary();
-            table.dateTime('start');
+            table.dateTime('start').index();
             table.dateTime('end');
             table.string('providerId');
             table.text('body');
@@ -32,6 +32,7 @@ exports.up = function(knex, Promise) {
             table.boolean('isOrganizer');
             table.boolean('isReminderOn');
             table.json('location');
+            table.string('_participants');
             table.string('type');
             table.integer('account_id')
                 .references('id')
@@ -44,5 +45,6 @@ exports.down = function(knex, Promise) {
     return Promise.all([
         knex.schema.dropTable('accounts'),
         knex.schema.dropTable('events'),
+        knex.schema.dropTable('participants'),
     ]);
 };

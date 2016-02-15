@@ -10,7 +10,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
     syncWindows: [
         { start: -30, end: 30, synced: null, every: 5 },
         { start: -365, end: -30, synced: null, every: 15 },
-        { start: 30, end: -365, synced: null, every: 15 },
+        { start: 30, end: 365, synced: null, every: 15 },
         { start: -730, end: -365, synced: null, every: 60 },
         { start: 365, end: 730, synced: null, every: 60 }
     ],
@@ -144,7 +144,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
         const accountWindows = account.get('windows');
         let toSync;
 
-        if (accountWindows) {
+        if (accountWindows && accountWindows.length > 0) {
             toSync = accountWindows.find(item => {
                 if (item.synced === null) return true;
                 const shouldHaveSynced = moment().subtract({ minutes: item.every });

@@ -50,3 +50,27 @@ button:disabled:hover, a.button.disabled:hover {
     border-color: #BBB;
     cursor: unset;
 }
+
+// Scrollbar
+
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track-piece {
+    background-color: #ffffff;
+    -webkit-border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:vertical {
+    height: 4px;
+    background-color: #666;
+    -webkit-border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+    width: 4px;
+    background-color: #666;
+    -webkit-border-radius: 4px;
+}

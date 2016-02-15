@@ -1,4 +1,4 @@
-<div class="settings md-modal md-event md-effect {{if isEnabled "md-show"}}" id="modal-event-body" style={{style}}>
+<div class="settings md-modal md-event md-effect {{if isEnabled "md-show"}}" id="modal-event-body" style={{style}} draggable="true">
     <div class="md-content">
         <header>
             {{#if isFullBodyVisible}}
@@ -12,12 +12,39 @@
                 {{b-event-modal-body body=event.body type=event.bodyType}}
             {{else}}
                 <section>
-                    <p><i class="fa fa-calendar"></i> {{day}}</p>
-                    <p><i class="fa fa-clock-o"></i> {{moment-hour event.start}} <i class="fa fa-long-arrow-right"></i> {{moment-hour event.end}}</p>
+                    <ul>
+                        <li>
+                            <i class="icon-calendar"></i>
+                            <span>{{day}}</span>
+                        </li>
+                        <li>
+                            <i class="icon-clock"></i>
+                            <span>{{moment-hour event.start}} <i class="icon-arrow40"></i> {{moment-hour event.end}}</span>
+                        </li>
+                    </ul>
                 </section>
                 {{#if event.location}}
                     <section class="event-location">
-                        <p {{action "openLocation"}}><i class="fa fa-map-marker"></i> {{event.location}}</p>
+                        <ul>
+                            <li {{action "openLocation"}}><i class="icon-map1"></i> {{event.location}}</li>
+                        </ul>
+                    </section>
+                {{/if}}
+                {{#if event.participants}}
+                    <section class="event-participants">
+                        <ul>
+                            {{#each event.participants as |participant|}}
+                                <li>
+                                    <div class="avatar">
+                                        <i class="icon-user1"></i>
+                                    </div>
+                                    <div class="name">
+                                        <span class="real-name">{{participant.name}}</span>
+                                        <span class="email"><a href="mailto:{{participant.email}}">{{participant.email}}</a></span>
+                                    </div>
+                                </li>
+                            {{/each}}
+                        </ul>
                     </section>
                 {{/if}}
                 {{#if bodyPreview}}

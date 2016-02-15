@@ -10,7 +10,7 @@
   "scripts": {
     "build": "ember build",
     "start": "ember server",
-    "test": "eslint app",
+    "test": "eslint app && ember electron:test",
     "postinstall": "./node_modules/.bin/electron-rebuild",
     "reset": "rm ./database/waffle_empty.sqlite && cd ./database && knex migrate:latest && cd .. && ember electron"
   },

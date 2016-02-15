@@ -1,7 +1,7 @@
 /**
  * Prevents redirects on file drag & drops
  */
-export function initialize( /* application */ ) {
+export function initialize(/* application */) {
     document.ondragover = event => {
         event.preventDefault();
         return false;

@@ -36,7 +36,7 @@ export default ApplicationAdapter.extend({
 
     deleteRecord(store, type, snapshot) {
         const record = snapshot.record;
-        record.deleteAllEvents()
+        return record.deleteAllEvents()
             .then(() => this._super(...arguments));
     }
 });

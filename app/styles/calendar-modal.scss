@@ -1,3 +1,5 @@
+@import './colors';
+
 .md-modal.md-event {
     transform-origin: top left;
     width: 320px;
@@ -10,6 +12,19 @@
     p {
         margin-bottom: 0rem;
         transition: .5s;
+    }
+
+    ul {
+        margin-bottom: 0;
+    }
+
+    li {
+        display: flex;
+    }
+
+    li:last-of-type {
+        margin-bottom: 0;
+        padding-bottom: 0;
     }
 
     header {
@@ -31,6 +46,12 @@
         border-bottom: 1px #EFEFEF solid;
         padding: 10px 0;
         height: initial;
+        text-align: left;
+    }
+
+    section:last-of-type {
+        border-bottom: none;
+        padding-bottom: 0;
     }
 
     section:first-of-type {
@@ -85,8 +106,26 @@
         }
     }
 
+    section.event-participants {
+        max-height: 130px;
+        overflow-x: hidden;
+        overflow-y: scroll;
+
+        div.name {
+            display: flex;
+            flex-direction: column;
+        }
+
+        span.email a {
+            font-size: .8em;
+            color: $unimportant-text-color;
+        }
+    }
+
     .md-body {
         height: auto;
+        font-size: .9em;
+        font-weight: 400;
     }
 }
 

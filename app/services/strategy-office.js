@@ -1,6 +1,7 @@
 import Ember from 'ember';
 import moment from 'moment';
 import { Mixin, Debug } from '../mixins/debugger';
+import { stringify } from '../utils/json';
 
 export default Ember.Service.extend(Mixin, {
     store: Ember.inject.service(),
@@ -47,7 +48,7 @@ export default Ember.Service.extend(Mixin, {
 
     getCalendarView(startDate, endDate, account, syncOptions) {
         return new Promise((resolve) => {
-            const URI = require('urijs');
+            const uri = require('urijs');
 
             const oauth = account.get('oauth');
             const username = account.get('username');
@@ -55,10 +56,10 @@ export default Ember.Service.extend(Mixin, {
             const start = moment(startDate).toISOString();
             const end = moment(endDate).toISOString();
 
-            const fetchURL = URI(`${this.api.base}users/${username}/calendarview`);
+            const fetchURL = uri(`${this.api.base}users/${username}/calendarview`);
             fetchURL.setQuery({
-              'startDateTime': `${start}`,
-              'endDateTime': `${end}`
+                startDateTime: start,
+                endDateTime: end
             });
 
             return this._fetchEvents(fetchURL.toString(), oauth.access_token, syncOptions, account)
@@ -70,38 +71,8 @@ export default Ember.Service.extend(Mixin, {
 
     authenticate(existingUser) {
         return new Promise((resolve, reject) => {
-            const URI = require('urijs');
             const BrowserWindow = require('electron').remote.BrowserWindow;
-
-            const authUrl = URI(this.oa2.base + this.oa2.authUrl);
-
-            authUrl.setQuery({
-              'redirect_uri': 'https://redirect.butter',
-              'scope': this.oa2.scopes.join(' '),
-              'client_id': this.oa2.clientID
-            });
-
-            if (this.oa2.clientSecret) {
-              authUrl.setQuery({
-                'response_type': 'code'
-              });
-            } else {
-              authUrl.setQuery({
-                  'response_type': 'id_token token',
-                  'response_mode': 'fragment',
-                  'state': '12345',
-                  'nonce': '678910'
-              });
-            }
-
-            if (existingUser) {
-              // Todo: DomainHint is probably only correct for O365
-              authUrl.setQuery({
-                'prompt': 'none',
-                'login_hint': existingUser,
-                'domain_hint': 'organizations'
-              });
-            }
+            const authUrl = this._makeAuthURI(existingUser);
 
             let authWindow = new BrowserWindow({
                 width: 800,
@@ -109,8 +80,6 @@ export default Ember.Service.extend(Mixin, {
                 show: false,
                 'node-integration': false
             });
-
-            console.log(authUrl.toString());
 
             authWindow.loadURL(authUrl.toString());
 
@@ -132,6 +101,47 @@ export default Ember.Service.extend(Mixin, {
         });
     },
 
+    /**
+     * Makes a URI to authenticate against O365, depending on configuration
+     * and whether or not we have an existing user
+     * @param  {string} existingUser - Email address of the "existing user"
+     * @return {Object/uri.js}       - uri.js url object
+     */
+    _makeAuthURI(existingUser) {
+        const uri = require('urijs');
+        const authUrl = uri(this.oa2.base + this.oa2.authUrl);
+
+        authUrl.setQuery({
+            redirect_uri: 'https://redirect.butter',
+            scope: this.oa2.scopes.join(' '),
+            client_id: this.oa2.clientID
+        });
+
+        if (this.oa2.clientSecret) {
+            authUrl.setQuery({
+                response_type: 'code'
+            });
+        } else {
+            authUrl.setQuery({
+                response_type: 'id_token token',
+                response_mode: 'fragment',
+                state: '12345',
+                nonce: '678910'
+            });
+        }
+
+        if (existingUser) {
+            // Todo: DomainHint is probably only correct for O365
+            authUrl.setQuery({
+                prompt: 'none',
+                login_hint: existingUser,
+                domain_hint: 'organizations'
+            });
+        }
+
+        return authUrl;
+    },
+
     _getEmailFromToken(token) {
         if (!token) return null;
 
@@ -145,16 +155,16 @@ export default Ember.Service.extend(Mixin, {
 
     _fetchEvents(url, token, syncOptions, account) {
         return new Promise((resolve, reject) => {
-            const URI = require('urijs');
+            const uri = require('urijs');
 
             const events = [];
             const occurences = [];
             const masters = [];
-            let firstUrl = URI(url);
-            let deltaToken =  account.get('sync.deltaToken');
+            const firstUrl = uri(url);
+            let deltaToken = account.get('sync.deltaToken');
 
             if (syncOptions.useDelta && deltaToken) {
-                firstUrl.setQuery('deltatoken', `${deltaToken}`);
+                firstUrl.setQuery('deltatoken', deltaToken);
             }
 
             const fetch = (_url, _token, _trackChanges) => {
@@ -227,6 +237,7 @@ export default Ember.Service.extend(Mixin, {
         const isAllDay = (ev.IsAllDay || !start.isSame(end, 'day'));
         const location = (ev.Location) ? ev.Location.DisplayName : '';
         const organizer = (ev.Organizer && ev.Organizer.EmailAddress) ? ev.Organizer.EmailAddress : '';
+        const _participants = this._makeParticipants(ev);
 
         return {
             start: start.format(),
@@ -241,10 +252,27 @@ export default Ember.Service.extend(Mixin, {
             isOrganizer: ev.IsOrganizer,
             isReminderOn: ev.IsReminderOn,
             isCancelled: ev.IsCancelled,
+            _participants,
             organizer,
             location,
             isAllDay
         };
+    },
+
+    _makeParticipants(ev) {
+        if (ev.Attendees && ev.Attendees.length && ev.Attendees.length > 0) {
+            const result = [];
+
+            for (let i = 0; i < ev.Attendees.length; i++) {
+                result.push({
+                    name: ev.Attendees[i].EmailAddress.Name,
+                    email: ev.Attendees[i].EmailAddress.Address
+                });
+            }
+
+            return stringify(result);
+        }
+        return '{[]}';
     },
 
     _makeEventFromOccurence(occurence, masters) {

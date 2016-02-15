@@ -17,10 +17,10 @@ export default DS.Model.extend({
      */
     deleteAllEvents() {
         return new Promise((resolve, reject) => {
-            const id = this.get('id');
+            const rawQuery = `\`account_id\` like ${this.get('id')}`;
             const qb = Event.query();
 
-            qb.where('account_id', id)
+            return qb.whereRaw(rawQuery)
                 .delete()
                 .then(deletionCount => resolve(deletionCount))
                 .catch(error => reject(error));
