@@ -3,15 +3,21 @@ import Ember from 'ember';
 import moment from 'moment';
 import { Mixin, Debug } from '../mixins/debugger';
 
+var googleAuth = require('google-auth-library');
+var google = require('googleapis');
+
 export default Ember.Service.extend(Mixin, {
     store: Ember.inject.service(),
 
+    oauthClient: undefined,
+
     oa2: {
-        clientID: 'b5f61636-8c63-4a7c-b4a3-6af6df33ad15',
-        base: 'https://login.microsoftonline.com/common',
-        authUrl: '/oauth2/v2.0/authorize',
-        tokenUrl: '/oauth2/v2.0/token',
-        scopes: ['openid', 'https://outlook.office.com/Calendars.read']
+        clientID: '1007908240432-bmj6cc5290j6u61jn4md0ippjn61fg8u.apps.googleusercontent.com',
+        base: '',
+        authUrl: '',
+        tokenUrl: '',
+        scopes: ['https://www.googleapis.com/auth/calendar'],
+        redirectURI: 'https://google.com'
     },
 
     api: {
@@ -26,7 +32,7 @@ export default Ember.Service.extend(Mixin, {
 
     init() {
         this._super(...arguments);
-        this.set('debugger', new Debug('Sync Office'));
+        this.set('debugger', new Debug('Sync Google'));
     },
 
     addAccount() {
@@ -35,9 +41,9 @@ export default Ember.Service.extend(Mixin, {
                 if (!response || !response.id_token) return;
 
                 const newAccount = this.get('store').createRecord('account', {
-                    name: 'Office 365',
+                    name: 'Google',
                     username: this._getEmailFromToken(response.id_token),
-                    strategy: 'office',
+                    strategy: 'google',
                     oauth: response
                 }).save();
 
@@ -65,16 +71,18 @@ export default Ember.Service.extend(Mixin, {
     authenticate(existingUser) {
         return new Promise((resolve, reject) => {
             const BrowserWindow = require('electron').remote.BrowserWindow;
-            const resp = (this.oa2.clientSecret) ? '&response_type=code' : '&response_type=id_token+token';
-            const red = '&redirect_uri=https%3A%2F%2Fredirect.butter';
-            const scope = '&scope=' + this.oa2.scopes.join(' ');
-            const client = '?client_id=' + this.oa2.clientID;
-            const nonce = (this.oa2.clientSecret) ? '' : '&response_mode=fragment&state=12345&nonce=678910';
-            const prompt = (existingUser) ? `&prompt=none&login_hint=${existingUser}` : '';
-            // Todo: DomainHint is probably only correct for O365
-            const domainHint = (existingUser) ? '&domain_hint=organizations' : '';
-            const params = client + resp + scope + red + prompt + domainHint + nonce;
-            const authUrl = this.oa2.base + this.oa2.authUrl + params;
+
+            var auth = new googleAuth();
+            this.oauthClient = new auth.OAuth2(
+              this.oa2.clientID,
+              undefined,
+              this.oa2.redirectURI
+            );
+
+            var authURL = this.oauthClient.generateAuthUrl({
+              access_type: 'offline',
+              scope: this.oa2.scopes
+            });
 
             let authWindow = new BrowserWindow({
                 width: 800,
@@ -83,7 +91,7 @@ export default Ember.Service.extend(Mixin, {
                 'node-integration': false
             });
 
-            authWindow.loadURL(authUrl);
+            authWindow.loadURL(authURL);
 
             if (!existingUser) {
                 authWindow.show();
@@ -301,14 +309,25 @@ export default Ember.Service.extend(Mixin, {
     },
 
     _handleCallback(url, win, resolve, reject) {
-        const rawCode = /code=([^&]*)/.exec(url) || null;
-        const rawToken = /access_token=([^&]*)/.exec(url) || null;
-        const rawId = /id_token=([^&]*)/.exec(url) || null;
-        const code = (rawCode && rawCode.length > 1) ? rawCode[1] : null;
-        const token = (rawToken && rawToken.length > 1) ? rawToken[1] : null;
-        const id = (rawId && rawId.length > 1) ? rawId[1] : null;
-        const err = /\?error=(.+)$/.exec(url);
+        const URI = require('urijs');
 
+        const redirectedTo = URI(url);
+        const authCode = redirectedTo.getSearch('code');
+
+        debugger;
+
+        this.oauthClient.getToken(authCode, (err, token) => {
+          win.destroy();
+
+          if (err) {
+            reject(err);
+          }
+
+          if (token) {
+
+          }
+        });
+/**
         if (code || err || token) {
             win.destroy();
 
@@ -327,7 +346,7 @@ export default Ember.Service.extend(Mixin, {
             } else if (err) {
                 reject(err);
             }
-        }
+        }**/
     },
 
     /**

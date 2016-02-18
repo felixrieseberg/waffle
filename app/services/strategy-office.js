@@ -11,7 +11,8 @@ export default Ember.Service.extend(Mixin, {
         base: 'https://login.microsoftonline.com/common',
         authUrl: '/oauth2/v2.0/authorize',
         tokenUrl: '/oauth2/v2.0/token',
-        scopes: ['openid', 'https://outlook.office.com/Calendars.read']
+        scopes: ['openid', 'https://outlook.office.com/Calendars.read'],
+        redirectURI: 'https://redirect.butter'
     },
 
     api: {
@@ -341,11 +342,13 @@ export default Ember.Service.extend(Mixin, {
             superagent
                 .post(tokenUrl)
                 .type('form')
-                .send(`client_id=${this.oa2.clientID}`)
-                .send(`client_secret=${this.oa2.clientSecret}`)
-                .send(`code=${code}`)
-                .send('redirect_uri=https%3A%2F%2Fredirect.butter')
-                .send('grant_type=authorization_code')
+                .send({
+                  client_id: this.oa2.clientID,
+                  client_secret: this.oa2.clientSecret,
+                  code: code,
+                  redirect_uri: this.oa2.redirectURI,
+                  grant_type: 'authorization_code'
+                })
                 .end((error, response) => {
                     if (response && response.ok && response.body) {
                         resolve(response.body);

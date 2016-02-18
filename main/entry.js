@@ -37,6 +37,8 @@ app.on('ready', function onReady() {
             titleBarStyle: 'hidden'
         });
 
+        // Display a cute lil' waffle in the
+        // terminal window.
         waffle();
 
         delete mainWindow.module;
