@@ -12,13 +12,13 @@
 <div class="right">
     {{!-- <a {{action "calendarViewChangeHandler" "weekly"}}>Week View</a>
     <a {{action "calendarViewChangeHandler" "monthly"}}>Month View</a> --}}
-    <a {{action "moveCalendar" "back"}} title="Go Back" class="header-button icon-button">
+    <a {{action "moveCalendar" "back"}} id="headerGoBack" title="Go Back" class="header-button icon-button">
         <i class="icon-arrow48"></i>
     </a>
-    <a {{action "moveCalendar" "today"}} title="Go to Today" class="header-button">
+    <a {{action "moveCalendar" "today"}} id="headerGoToday" title="Go to Today" class="header-button">
         Today
     </a>
-    <a {{action "moveCalendar" "forward"}} title="Go Forward" class="header-button icon-button">
+    <a {{action "moveCalendar" "forward"}} id="headerGoForward" title="Go Forward" class="header-button icon-button">
         <i class="icon-arrow43"></i>
     </a>
 </div>
