@@ -54,6 +54,7 @@ export default Ember.Component.extend(Mixin, {
 
     setupRows() {
         this.time('Monthly Init');
+        this.set('events', []);
         this.get('rows').clear();
         this.get('rows').pushObjects(this._getRows(this.get('firstDay')));
         this._loadEvents();
@@ -161,7 +162,7 @@ export default Ember.Component.extend(Mixin, {
                         if (rows[i].endDate.isSameOrAfter(end, 'day')) break;
                     }
                 }
-            }, 25, this).then(() => {
+            }, 100, this).then(() => {
                 resolve(eventsInView);
             });
         });

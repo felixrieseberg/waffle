@@ -41,7 +41,6 @@ module.exports = function (defaults) {
         }
     });
 
-
     app.import('bower_components/lato/font/lato-regular/lato-regular.ttf', { destDir: 'font/lato-regular' });
     app.import('bower_components/lato/font/lato-regular/lato-regular.eot', { destDir: 'font/lato-regular' });
     app.import('bower_components/lato/font/lato-regular/lato-regular.svg', { destDir: 'font/lato-regular' });
