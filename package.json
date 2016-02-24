@@ -63,7 +63,7 @@
       "main/*",
       "database/**/*"
     ],
-    "name": null,
+    "name": "Waffle",
     "platform": "darwin",
     "arch": null,
     "version": null,
@@ -76,7 +76,7 @@
     "build-version": null,
     "cache": null,
     "helper-bundle-id": null,
-    "icon": null,
+    "icon": "assets/icon",
     "ignore": null,
     "out": null,
     "overwrite": null,

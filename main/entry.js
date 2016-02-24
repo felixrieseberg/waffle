@@ -34,7 +34,8 @@ app.on('ready', function onReady() {
             minHeight: 400,
             minWidth: 900,
             title: 'Waffle Calendar',
-            titleBarStyle: 'hidden'
+            titleBarStyle: 'hidden',
+            show: false
         });
 
         waffle();
@@ -42,8 +43,7 @@ app.on('ready', function onReady() {
         delete mainWindow.module;
 
         mainWindow.loadURL(path.join('file://', __dirname, '..', 'dist', 'index.html'));
-        mainWindow.on('closed', () => {
-            mainWindow = null;
-        });
+        mainWindow.on('closed', () => mainWindow = null);
+        mainWindow.webContents.on('did-finish-load', () => mainWindow.show());
     })
 });
