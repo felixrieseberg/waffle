@@ -11,7 +11,7 @@ export default Ember.Service.extend(Mixin, {
         base: 'https://login.microsoftonline.com/common',
         authUrl: '/oauth2/v2.0/authorize',
         tokenUrl: '/oauth2/v2.0/token',
-        scopes: ['openid', 'https://outlook.office.com/Calendars.read']
+        scopes: ['openid', 'https://outlook.office.com/Calendars.read', 'profile']
     },
 
     api: {
