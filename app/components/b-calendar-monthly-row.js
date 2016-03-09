@@ -62,10 +62,14 @@ export default Ember.Component.extend(Mixin, {
 
         events.forEach((event) => {
             for (let i = 0; i < days.length; i++) {
-                const start = moment(new Date(event.get('start')));
-                const end = moment(new Date(event.get('end')));
-                const startOn = start.isSame(days[i].date, 'day');
-                const endOn = end.isSame(days[i].date, 'day');
+                const start = new Date(event.get('start'));
+                const end = new Date(event.get('end'));
+
+                // We can allow us to do "dumb" comparisons, given that the
+                // data already arrived filtered from the db and the month
+                // component.
+                const startOn = (start.getDate() === days[i].date.date());
+                const endOn = (end.getDate() === days[i].date.date());
 
                 if (startOn || endOn || days[i].date.isBetween(start, end)) {
                     eventsInView[i].push(event);

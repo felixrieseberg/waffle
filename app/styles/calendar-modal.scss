@@ -20,6 +20,7 @@
 
     li {
         display: flex;
+        margin-bottom: 2px;
     }
 
     li:last-of-type {
@@ -119,6 +120,10 @@
         span.email a {
             font-size: .8em;
             color: $unimportant-text-color;
+        }
+
+        span.real-name {
+            margin-bottom: -8px;
         }
     }
 

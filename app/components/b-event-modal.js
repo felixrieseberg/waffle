@@ -4,17 +4,28 @@ import moment from 'moment';
 export default Ember.Component.extend({
     style: Ember.computed('top', 'left', function style() {
         // Total modal width: 320px;
-        const totalWidth = Ember.$(window).width();
-        const totalHeight = Ember.$(window).height();
-        let top = this.get('top') - 30;
+        const totalWidth = Ember.$('div.main').width();
+        const totalHeight = Ember.$('div.main').height();
+        let top = this.get('top') - 40;
         let left = this.get('left') + 60;
+        let expectedMinHeight = 200;
+
+        if (this.get('event.location')) {
+            expectedMinHeight = expectedMinHeight + 100;
+        }
+        if (this.get('participants') && this.get('participants').length > 0) {
+            expectedMinHeight = expectedMinHeight + 180;
+        }
+        if (this.get('bodyPreview')) {
+            expectedMinHeight = expectedMinHeight + 180;
+        }
 
         if (totalWidth - left < 330) {
             left = left - 440;
         }
 
-        if (totalHeight - top < 330) {
-            top = totalHeight - 400;
+        if (totalHeight - top < expectedMinHeight) {
+            top = totalHeight - expectedMinHeight;
         }
 
         return new Ember.Handlebars.SafeString(`transform: translate(${left}px, ${top}px)`);

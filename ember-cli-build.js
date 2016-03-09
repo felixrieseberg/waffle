@@ -13,7 +13,10 @@ module.exports = function (defaults) {
         "es6.templateLiterals",
         "es6.constants",
         "es6.properties.computed",
-        "es6.properties.shorthand"
+        "es6.properties.shorthand",
+        "es6.literals",
+        "es6.spec.symbols",
+        "es6.spread"
     ];
 
     var app = new EmberApp(defaults, {
@@ -22,11 +25,21 @@ module.exports = function (defaults) {
         },
         babel: {
             includePolyfill: true,
-            blacklist: blacklist
+            blacklist: blacklist,
+            comments: false,
         },
-        hinting: false
+        hinting: false,
+        minifyJS: {
+            enabled: false,
+            options: {
+                exclude: ["**/waffle.js"]
+            }
+        },
+        sourcemaps: {
+            enabled: EmberApp.env() !== 'production',
+            extensions: ['']
+        }
     });
-
 
     app.import('bower_components/lato/font/lato-regular/lato-regular.ttf', { destDir: 'font/lato-regular' });
     app.import('bower_components/lato/font/lato-regular/lato-regular.eot', { destDir: 'font/lato-regular' });

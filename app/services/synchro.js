@@ -74,7 +74,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
 
         Ember.RSVP.allSettled(promises)
             .then(() => this.trigger('update'))
-            .catch((e) => console.error(e))
+            .catch((e) => console.error(e)) // eslint-disable-line no-console
             .finally(() => this.set('isSyncEngineRunning', false));
     },
 
@@ -121,7 +121,7 @@ export default Ember.Service.extend(Ember.Evented, Mixin, {
                     this._updateWindow(account, syncWindow);
                 })
                 .catch((err) => {
-                    console.log(err);
+                    console.log(err); // eslint-disable-line no-console
                     const error = `Account ${account.get('name')} with user ${account.get('username')}`
                                 + `is corrupted, please delete and add again.`;
                     this.notifications.error(error);
