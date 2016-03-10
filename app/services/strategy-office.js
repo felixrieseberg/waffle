@@ -345,7 +345,6 @@ export default Ember.Service.extend(Mixin, {
                   client_id: this.oa2.clientID,
                   client_secret: this.oa2.clientSecret,
                   code: code,
-                  redirect_uri: this.oa2.redirectURI,
                   grant_type: 'authorization_code'
                 })
                 .end((error, response) => {
