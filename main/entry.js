@@ -38,6 +38,8 @@ app.on('ready', function onReady() {
             show: false
         });
 
+        // Display a cute lil' waffle in the
+        // terminal window.
         waffle();
 
         delete mainWindow.module;

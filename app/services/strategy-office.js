@@ -341,11 +341,12 @@ export default Ember.Service.extend(Mixin, {
             superagent
                 .post(tokenUrl)
                 .type('form')
-                .send(`client_id=${this.oa2.clientID}`)
-                .send(`client_secret=${this.oa2.clientSecret}`)
-                .send(`code=${code}`)
-                .send('redirect_uri=https%3A%2F%2Fredirect.butter')
-                .send('grant_type=authorization_code')
+                .send({
+                  client_id: this.oa2.clientID,
+                  client_secret: this.oa2.clientSecret,
+                  code: code,
+                  grant_type: 'authorization_code'
+                })
                 .end((error, response) => {
                     if (response && response.ok && response.body) {
                         resolve(response.body);
